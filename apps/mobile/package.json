@@ -14,7 +14,7 @@
   "dependencies": {
     "@tayfa/shared": "workspace:*",
     "@expo/vector-icons": "^14.0.4",
-    "@sentry/react-native": "^6.10.0",
+    "@sentry/react-native": "^8.16.0",
     "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "^5.62.11",
     "expo": "~52.0.27",
