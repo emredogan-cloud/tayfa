@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Fallback stacks; layout.tsx injects --font-sans / --font-display from next/font. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-sans);
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-cream text-ink antialiased;
+    font-feature-settings: 'ss01', 'cv01';
+  }
+
+  ::selection {
+    @apply bg-coral text-cream;
+  }
+}
+
+@layer components {
+  /* Soft grain/aurora background used behind hero + legal headers. */
+  .bg-aurora {
+    background:
+      radial-gradient(60% 80% at 15% 10%, rgba(255, 106, 91, 0.18), transparent 60%),
+      radial-gradient(50% 70% at 90% 0%, rgba(31, 182, 166, 0.16), transparent 55%),
+      linear-gradient(180deg, #fffdfa 0%, #f7f3ee 100%);
+  }
+
+  .container-tayfa {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-ink/10 bg-cream px-3 py-1 text-xs font-medium text-ink-muted;
+  }
+}
