@@ -1,0 +1,100 @@
+[
+  {
+    "id": "app-icon",
+    "prompt": "A premium iOS/Android app icon, opaque, centered on a smooth Crew Glow gradient (coral #FF5A3C top-left flowing to sunset amber #FFB23E bottom-right, 135 degrees, subtle film grain to avoid banding). The mark: three to four softly rounded organic pebble shapes overlapping and leaning toward each other like a small crew of friends standing close, the negative space between them implying a warm geometric letter 'T'. Forms in Soft Cream #FFF7F0 with faint frosted-glass translucency, one form tinted Mint Verify #2DD4A7 as a tiny verified accent dot. Apple-grade soft realism: gentle top-left light, soft inner highlight on the upper edge, large warm-tinted ambient shadow beneath the cluster, no hard edges. Modern, geometric, joyful, trustworthy, legible at 48px. No text, no photographic elements. AVOID: flat corporate logo, map pin, heart, flame, chat bubble, gloss/bevel, gray shadows, pure white or black, dating-app symbolism, busy detail.",
+    "size": "1024x1024",
+    "outfile": "assets/generated/icon/app-icon.png",
+    "background": "opaque"
+  },
+  {
+    "id": "adaptive-icon-foreground",
+    "prompt": "Android adaptive-icon foreground layer, transparent background. The mark only: rounded crew-cluster pebble forms in Soft Cream #FFF7F0 with a single Mint Verify #2DD4A7 accent dot and a soft warm contact shadow, centered within the adaptive safe zone occupying about 62 percent of the canvas, fully inside the central circle so nothing clips under circle/squircle masks. Crisp premium soft-realism, no background fill, no gradient. AVOID: background color, hard shadows, text, dating symbolism.",
+    "size": "1024x1024",
+    "outfile": "assets/generated/icon/adaptive-foreground.png",
+    "background": "transparent"
+  },
+  {
+    "id": "onboarding-welcome-hero",
+    "prompt": "Vertical mobile onboarding hero, opaque, editorial 35mm documentary photo feel blended with soft UI. A diverse crew of four friends aged 18-32, mixed genders and ethnicities, on a sunny Kadikoy seafront promenade at golden hour, mid-laugh and in motion: one balancing a bike, one holding two coffees, all leaning toward each other candidly. Faces turned, side-profile, or motion-blurred and non-identifiable. Bosphorus golden-hour light, ferries as soft bokeh in the background, no mappable landmark. Warm true-skin grade, light film grain, shallow depth of field. Lower third dissolves into a frosted Soft Cream #FFF7F0 glass panel with a soft warm-tinted shadow, leaving clean space for a headline in a geometric-humanist grotesque and a Crew Glow (#FF5A3C to #FFB23E) pill CTA. Mood: optimistic, welcoming, belonging. AVOID: posed corporate smiles at camera, romance or couple framing, stock vibe, hearts/swipes, cold blue, recognizable faces or addresses.",
+    "size": "1024x1536",
+    "outfile": "assets/generated/onboarding/welcome-hero.png",
+    "background": "opaque"
+  },
+  {
+    "id": "onboarding-safety-hero",
+    "prompt": "Vertical onboarding illustration-photo hybrid, opaque, reassuring and calm. Foreground: a single floating frosted-glass profile card with 24px rounded corners and a soft warm double shadow, showing an abstracted faceless avatar and a glowing Mint Verify #2DD4A7 verified tick badge with a gentle mint halo. Behind it, a soft blurred warm daylight scene of friends meeting. The Mint Assure gradient (#2DD4A7 to #5B8DEF) appears only as subtle ambient glow around the trust badge. Background warm Soft Cream #FFF7F0 with gentle grain. Mood: protective, premium, calm, the feeling of being safe, never surveillance or alarm. Semi-flat illustrated elements over photographic depth. AVOID: police/shield-as-threat aesthetic, padlock cliche overload, red alarm colors, fingerprint-scanner creepiness, real faces.",
+    "size": "1024x1536",
+    "outfile": "assets/generated/onboarding/safety-hero.png",
+    "background": "opaque"
+  },
+  {
+    "id": "onboarding-taste-cards-hero",
+    "prompt": "Vertical hero for an interest/taste-selection screen, opaque. A playful fanned stack of rounded-corner taste cards floating in soft 3D, each a frosted-glass tile with a single warm-gradient activity illustration: a bike wheel, a climbing boulder hold, a steaming third-wave coffee cup, board-game dice, a ferry, a picnic basket. Cards tilt and overlap with depth and parallax, soft warm-tinted shadows; the front card is gently lifted and glows with a Crew Glow edge. Background: smooth Soft Cream to coral-tint gradient with grain. Friendly geometric icon style, one coherent duotone set (coral #FF5A3C plus plum #1E1530), each glyph with a subtle long shadow. Cards are text-free, icon-only. Mood: delightful, tactile, optimistic. AVOID: flat clip-art, mismatched icon styles, dating/heart imagery, garbled text, gray shadows.",
+    "size": "1024x1536",
+    "outfile": "assets/generated/onboarding/taste-cards-hero.png",
+    "background": "opaque"
+  },
+  {
+    "id": "event-tile-cycling",
+    "prompt": "Horizontal event-category tile, opaque. A small diverse crew of friends aged 18-32 cycling together along a sunlit Bosphorus-side path at golden hour, shot 35mm documentary with motion blur in the wheels and background, candid laughter, faces turned or motion-blurred and non-identifiable. Warm grade, light grain, shallow depth. Lower third fades into a soft Dusk Depth-tinted scrim for legible overlaid white text. Mood: free, energetic, social. AVOID: lycra racing-team corporate look, lone cyclist, map/GPS overlays, recognizable landmark or address, romance framing, baked-in text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/events/tile-cycling.png",
+    "background": "opaque"
+  },
+  {
+    "id": "event-tile-bouldering",
+    "prompt": "Horizontal event-category tile, opaque. Three friends at an indoor bouldering gym in warm tungsten plus window light, one mid-reach on a colorful wall, others spotting and cheering below, chalk dust in the air, genuine encouragement. Candid, in motion, faces side-on or below-frame and non-identifiable. Vibrant holds naturally echo coral #FF5A3C and mint #2DD4A7 accents. Lower-third soft dark scrim for overlaid text. Mood: supportive crew energy, adrenaline, trust. AVOID: solo hero-climber stock shot, extreme-sport ad gloss, gym-brand logos, staged smiles at camera, baked-in text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/events/tile-bouldering.png",
+    "background": "opaque"
+  },
+  {
+    "id": "event-tile-coffee",
+    "prompt": "Horizontal event-category tile, opaque. A cozy Kadikoy third-wave cafe table at a three-quarter angle: four hands clinking flat-whites and reaching for pastries, plants and warm wood, soft window light, steam rising, an open board-game box edge in frame. Candid and warm, no identifiable faces (hands and torsos only ideal). Editorial food-and-people grade, light grain. Lower-third gentle scrim for overlaid text. Mood: easy belonging, conversation. AVOID: two-people-on-a-date across a candlelit table, romantic single rose, corporate meeting vibe, brand logos, baked-in text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/events/tile-coffee.png",
+    "background": "opaque"
+  },
+  {
+    "id": "event-tile-boardgames",
+    "prompt": "Horizontal event-category tile, opaque. A warm evening indoor scene: a crew of five around a table lit by soft warm lamps, mid-game, laughing, someone rolling dice, cards fanned, snacks and a couple of drinks. Dusk Depth ambient mood with coral lamp glow. Candid, faces turned or blurred and non-identifiable. 35mm, grain, shallow depth. Lower-third scrim for overlaid text. Mood: playful, cozy, tight-knit crew. AVOID: poker-gambling-casino vibe, dating-night-in framing, unsafe darkness, recognizable faces, baked-in text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/events/tile-boardgames.png",
+    "background": "opaque"
+  },
+  {
+    "id": "events-empty-state",
+    "prompt": "Square empty-state illustration, transparent background. Semi-flat illustration with depth: a friendly abstracted crew of three faceless characters (simple rounded inclusive forms, no facial features) gathered around a softly glowing map-less compass / let's-start-something spark, with floating activity glyphs (bike, coffee, dice, boulder hold) orbiting on subtle long shadows. Warm gradient fills with Crew Glow coral-to-amber accents, gentle grain, a few hand-drawn imperfect lines for warmth. Inviting, optimistic, gently nudging the user to host or widen their search, never sad or lonely. No text. AVOID: a single dejected person, empty-box ghost-town sadness, literal map with pins, dating imagery, flat corporate-memphis blandness.",
+    "size": "1024x1024",
+    "outfile": "assets/generated/events/empty-state.png",
+    "background": "transparent"
+  },
+  {
+    "id": "marketing-landing-hero",
+    "prompt": "Wide landing-page hero, opaque, cinematic but warm. A diverse crew of five friends aged 18-32 walking and laughing together toward a Kadikoy seafront at golden hour, one with a bike, one with a board-game box, candid mid-motion, clearly a crew that just met up to do something. 35mm documentary, warm true-skin grade, light film grain, shallow depth, Bosphorus light and soft-bokeh ferries with no mappable landmark. Faces turned, side-on, or motion-blurred and non-identifiable. Composition leaves clean negative space on the left over a soft Crew Glow-tinted scrim for an overlaid headline in a bold geometric-humanist grotesque plus a coral #FF5A3C pill CTA. To the right, one floating frosted-glass app-UI card with 24px rounded corners and a warm double shadow previewing an event card with a Mint #2DD4A7 verified tick, Apple-keynote product feel. Mood: optimistic, premium, belonging. AVOID: dating/couple framing, hearts/swipes, corporate stock, cold blue, recognizable faces or addresses, cluttered text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/marketing/landing-hero.png",
+    "background": "opaque"
+  },
+  {
+    "id": "marketing-how-it-works",
+    "prompt": "Wide three-panel how-it-works illustration band, opaque, on a warm Soft Cream #FFF7F0 background with gentle grain. Three connected semi-flat illustrated scenes with soft depth, linked by a subtle coral dotted path: (1) Verify, a frosted profile card with a glowing Mint Verify tick; (2) Discover, a stack of event tiles with activity glyphs (bike, coffee, boulder) and a fuzzed neighborhood blob instead of a precise pin; (3) Meet up, three abstracted faceless friends high-fiving and clinking cups. Consistent friendly geometric icon language, Crew Glow accents, warm-tinted long shadows, a few hand-drawn imperfect lines, inclusive abstracted characters with no faces. Leave headroom above each panel for a short caption. Mood: clear, joyful, trustworthy. AVOID: literal map with exact pins, flat corporate-memphis, dating imagery, gray shadows, baked-in paragraph text.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/marketing/how-it-works.png",
+    "background": "opaque"
+  },
+  {
+    "id": "marketing-safety",
+    "prompt": "Wide safety-section visual, opaque, calm and reassuring. Centerpiece: a large frosted-glass panel floating over a softly blurred warm daylight scene of friends meeting in public, with a constellation of small trust cues: a glowing Mint Verify #2DD4A7 shield-tick, an abstracted report/block control rendered as a friendly rounded button (never scary), a women-only / verified-only filter chip, and a fuzzed-location blob showing privacy-by-design. The Mint Assure gradient (#2DD4A7 to #5B8DEF) appears only as a gentle ambient glow. Warm Soft Cream #FFF7F0 ground, soft warm-tinted shadows, premium Apple-grade depth, inclusive with no identifiable faces. Mood: protective, transparent, premium, safety is never an upsell. AVOID: surveillance/CCTV/creepy-tracking imagery, red alarm tones, police aesthetic, precise GPS map, padlock-cliche overload, paywall framing around safety.",
+    "size": "1536x1024",
+    "outfile": "assets/generated/marketing/safety.png",
+    "background": "opaque"
+  },
+  {
+    "id": "recap-card-story",
+    "prompt": "Vertical shareable recap card, opaque, premium keepsake feel. Rich Dusk Depth background (#3A2A55 to #1E1530, 160 degrees) with subtle grain and a warm Crew Glow light leak from the top-left corner. Centered, a soft frosted-glass card with 28px rounded corners, warm double shadow, and a faint top inner highlight holding the recap layout: a top zone for a small Tayfa crew-mark and a generic placeholder title; a middle hero zone with a tasteful activity-glyph montage (bike plus coffee plus dice in coherent coral/mint duotone with soft long shadows) instead of any photo of real people; a row of three abstracted faceless avatar circles implying the crew; and a lower stats strip with empty rounded chips ready for app-rendered numbers plus a generic fuzzed-area label like Kadikoy. Mint #2DD4A7 verified tick accent. Geometric-humanist type for any placeholder words, generous spacing, celebratory but tasteful, Spotify Wrapped meets Apple. Mood: joyful, proud, shareable, trustworthy. AVOID: real faces, any address/venue/map/GPS, real names or handles, dating/romance framing, cluttered layout, garbled text, neon gaudiness.",
+    "size": "1024x1536",
+    "outfile": "assets/generated/recap/recap-card-story.png",
+    "background": "opaque"
+  }
+]

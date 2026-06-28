@@ -11,6 +11,7 @@ const config: ExpoConfig = {
   scheme: 'tayfa',
   version: '0.1.0',
   orientation: 'portrait',
+  icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
   // Re-fetch JS over-the-air only when native runtime is compatible.
@@ -32,7 +33,10 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'app.tayfa.mobile',
-    adaptiveIcon: { backgroundColor: '#FFFBF7' },
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-foreground.png',
+      backgroundColor: '#FFFBF7',
+    },
     permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
   },
   plugins: [
