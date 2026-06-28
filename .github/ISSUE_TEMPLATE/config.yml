@@ -1,0 +1,9 @@
+# Force contributors through a template; route security issues off the public tracker.
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Report a security or privacy vulnerability
+    url: https://github.com/tayfa/tayfa/security/advisories/new
+    about: >-
+      Do NOT open a public issue for vulnerabilities (auth/RLS bypass, location
+      leaks, age-gate or moderation fail-open, secret exposure). Use a private
+      security advisory so we can fix it before disclosure (GDPR/KVKK obligations).

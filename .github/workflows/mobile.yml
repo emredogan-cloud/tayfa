@@ -1,0 +1,179 @@
+# Tayfa — Mobile (Expo / EAS) CI (mission §MANDATORY CI/CD).
+#
+# IMPORTANT: this CI environment has NO Android emulator, NO Google Play
+# credentials, and no Expo account by default. So the EAS build jobs are GATED
+# behind the EXPO_TOKEN secret with explicit `if:` guards. When the secret is
+# absent (the default in this repo today) the build jobs no-op cleanly and emit
+# an explanatory ::notice — they never fail the pipeline for missing credentials.
+#
+# What DOES run unconditionally on every PR: lint + typecheck of the mobile app,
+# so the React Native/Expo TypeScript surface stays green even without EAS.
+name: Mobile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile to run (requires EXPO_TOKEN)'
+        type: choice
+        default: debug
+        options: [debug, release, aab]
+
+concurrency:
+  group: mobile-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Always-on quality gate: lint + typecheck the mobile app. No native build,
+  # no credentials — pure TS/JS so it runs anywhere.
+  # ---------------------------------------------------------------------------
+  static:
+    name: Mobile lint & typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Detect mobile app
+        id: detect
+        run: |
+          if [ -f apps/mobile/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=mobile::apps/mobile not present yet — skipping lint/typecheck."
+          fi
+      - name: Lint mobile
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm --filter @tayfa/mobile lint
+      - name: Typecheck mobile
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm --filter @tayfa/mobile typecheck
+
+  # ---------------------------------------------------------------------------
+  # Gate: resolves once whether EAS builds may run. Centralizes the secret check
+  # so each build job reads a single boolean output instead of re-evaluating it.
+  # ---------------------------------------------------------------------------
+  eas-gate:
+    name: EAS credentials gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check for EXPO_TOKEN
+        id: check
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -n "$EXPO_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=EAS::EXPO_TOKEN present — EAS Android builds will run."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=EAS::EXPO_TOKEN not set — EAS Android builds are skipped (no-op). Add the secret to enable Android debug/release/AAB builds."
+          fi
+
+  # ---------------------------------------------------------------------------
+  # EAS Android builds — matrix over debug / release / AAB. Each entry runs ONLY
+  # when both (a) EXPO_TOKEN exists and (b) the relevant trigger matches:
+  #   - debug   → every PR/push (fast smoke build)
+  #   - release → main pushes + manual dispatch
+  #   - aab     → manual dispatch only (Play Store artifact, slow & credentialed)
+  # ---------------------------------------------------------------------------
+  eas-build:
+    name: EAS Android (${{ matrix.variant }})
+    runs-on: ubuntu-latest
+    needs: [static, eas-gate]
+    if: needs.eas-gate.outputs.enabled == 'true'
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: debug
+            profile: development
+            platform: android
+          - variant: release
+            profile: preview
+            platform: android
+          - variant: aab
+            profile: production
+            platform: android
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Decide whether this variant runs for the current trigger
+        id: should
+        run: |
+          variant="${{ matrix.variant }}"
+          event="${{ github.event_name }}"
+          run="false"
+          case "$variant" in
+            debug) run="true" ;;
+            release)
+              if [ "$event" = "push" ] || [ "$event" = "workflow_dispatch" ]; then run="true"; fi ;;
+            aab)
+              if [ "$event" = "workflow_dispatch" ]; then run="true"; fi ;;
+          esac
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          if [ "$run" != "true" ]; then
+            echo "::notice title=EAS::Variant '$variant' is not built on '$event' — skipping."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.should.outputs.run == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.should.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.should.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Setup EAS / Expo CLI
+        if: steps.should.outputs.run == 'true'
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+        if: steps.should.outputs.run == 'true'
+      - name: EAS build (Android ${{ matrix.variant }})
+        if: steps.should.outputs.run == 'true'
+        working-directory: apps/mobile
+        # --local keeps the artifact in-runner & avoids consuming hosted EAS build
+        # minutes; --non-interactive is mandatory in CI. AAB uses the production
+        # profile (Play Store bundle), debug/release produce APKs.
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile ${{ matrix.profile }} \
+            --local \
+            --non-interactive \
+            --output "build-android-${{ matrix.variant }}.${{ matrix.variant == 'aab' && 'aab' || 'apk' }}"
+      - name: Upload Android artifact
+        if: steps.should.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.variant }}
+          path: apps/mobile/build-android-${{ matrix.variant }}.*
+          if-no-files-found: error
+          retention-days: 7

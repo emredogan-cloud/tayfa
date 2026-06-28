@@ -1,0 +1,69 @@
+# Tayfa — Dependabot (mission §MANDATORY CI/CD). Weekly updates for npm (the pnpm
+# monorepo graph) and the GitHub Actions we pin in workflows. Security-data deps
+# and the toolchain are grouped so reviewers get a handful of coherent PRs rather
+# than dozens. Conventional-commit prefixes keep PR titles passing pr-validation.
+version: 2
+updates:
+  # ---- npm / pnpm workspace (root manifest drives the whole workspace) --------
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - dependencies
+      - npm
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      # Patch/minor bumps batched to cut review noise; majors stay individual.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+      # Keep the build/test toolchain coherent across the monorepo.
+      toolchain:
+        patterns:
+          - 'typescript'
+          - 'typescript-eslint'
+          - 'eslint*'
+          - '@eslint/*'
+          - 'prettier'
+          - 'turbo'
+          - 'vitest'
+          - '@vitest/*'
+          - 'tsx'
+      drizzle:
+        patterns:
+          - 'drizzle-orm'
+          - 'drizzle-kit'
+    ignore:
+      # Node engine is pinned to 24 via .nvmrc/engines; don't chase @types/node majors.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # ---- GitHub Actions used in .github/workflows -------------------------------
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        patterns:
+          - '*'

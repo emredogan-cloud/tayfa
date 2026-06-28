@@ -1,0 +1,24 @@
+# CodeQL configuration for the Tayfa monorepo (referenced by security.yml).
+# We analyze first-party TypeScript/JavaScript only; generated artifacts and
+# vendored deps are excluded so the alert list stays signal-rich.
+name: 'Tayfa CodeQL config'
+
+# security-extended is selected in the workflow; this keeps the default query
+# suite plus our scope. Add custom packs here if we adopt them later.
+queries:
+  - uses: security-and-quality
+
+paths:
+  - apps
+  - packages
+  - infra
+
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/.next/**'
+  - '**/coverage/**'
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.d.ts'
+  - '**/.turbo/**'

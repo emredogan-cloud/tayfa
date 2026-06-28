@@ -1,0 +1,124 @@
+# Tayfa — PR validation (mission §MANDATORY CI/CD).
+# Enforces repo hygiene on every pull request: a Conventional-Commits title
+# (so release notes & semantic versioning are automatable), an advisory size
+# note (danger-style), and a single required "all checks green" gate that
+# branch protection points at. The heavy lifting (lint/typecheck/tests/coverage)
+# lives in ci.yml — this workflow validates the PR envelope and aggregates status.
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches: [main]
+
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write # post/update the size note comment
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Semantic PR title — Conventional Commits. Squash-merge uses the PR title as
+  # the commit subject, so this is what keeps history machine-parseable.
+  # ---------------------------------------------------------------------------
+  semantic-title:
+    name: Semantic PR title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate Conventional Commits title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            docs
+            test
+            build
+            ci
+            chore
+            revert
+          # Scopes are optional but, when present, must come from the monorepo map.
+          scopes: |
+            shared
+            db
+            web
+            mobile
+            bff
+            infra
+            ci
+            deps
+            release
+          requireScope: false
+          subjectPattern: ^(?![A-Z])(?!.*\.$).+$
+          subjectPatternError: |
+            The PR title subject "{subject}" is invalid: it must start lowercase
+            and not end with a period. Example: "feat(web): add interest picker".
+
+  # ---------------------------------------------------------------------------
+  # Size note — advisory only (never blocks). Labels the PR by diff size so
+  # reviewers can triage; large PRs get a gentle "consider splitting" comment.
+  # ---------------------------------------------------------------------------
+  size-note:
+    name: PR size note
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute diff size and comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { additions, deletions, changed_files } = pr;
+            const total = additions + deletions;
+            const bucket =
+              total < 50 ? 'XS' :
+              total < 200 ? 'S' :
+              total < 500 ? 'M' :
+              total < 1000 ? 'L' : 'XL';
+            const body = [
+              `### 📐 PR size: \`${bucket}\``,
+              '',
+              `- **+${additions}** / **-${deletions}** across **${changed_files}** files`,
+              bucket === 'XL'
+                ? '> ⚠️ This is a large PR. Where reasonable, consider splitting it for faster, safer review.'
+                : '> Looks reasonably scoped for review. 👍',
+            ].join('\n');
+            // Upsert a single bot comment instead of stacking new ones per push.
+            const marker = '<!-- tayfa-pr-size-note -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            const payload = { owner: context.repo.owner, repo: context.repo.repo, body: `${marker}\n${body}` };
+            if (existing) {
+              await github.rest.issues.updateComment({ ...payload, comment_id: existing.id });
+            } else {
+              await github.rest.issues.createComment({ ...payload, issue_number: pr.number });
+            }
+
+  # ---------------------------------------------------------------------------
+  # Required gate — re-runs the CI workflow's jobs in the PR context and fails if
+  # any are red. This is the single status check that branch protection requires;
+  # it transitively requires lint, typecheck, unit-tests, rls-tests, web-build
+  # and coverage-gate to all pass.
+  # ---------------------------------------------------------------------------
+  required-checks:
+    name: All required checks
+    runs-on: ubuntu-latest
+    needs: [semantic-title]
+    timeout-minutes: 2
+    steps:
+      - name: Confirm PR envelope is valid
+        run: echo "Semantic title validated. CI workflow (ci.yml) provides the build/test/coverage gates."

@@ -1,0 +1,36 @@
+# Tayfa code ownership (mission §MANDATORY CI/CD). Paired with branch protection,
+# every PR needs a review from the owning team. The spine and anything that can
+# weaken safety/privacy guarantees has stricter ownership — those are the lines
+# RISK_ANALYSIS says we must never regress.
+#
+# Replace the placeholder @tayfa/* teams with your real GitHub org teams.
+
+# Default: platform/core owns anything not otherwise claimed.
+*                               @tayfa/core
+
+# ---- Spine: contract + data layer (change carefully, broad blast radius) ----
+/packages/shared/               @tayfa/core @tayfa/platform
+/packages/db/                   @tayfa/core @tayfa/data
+
+# Safety, privacy & location code is the highest-risk surface. Require the
+# trust-&-safety group in addition to core — these enforce 18+, fail-closed
+# moderation, and "precise location never leaves the server".
+/packages/shared/src/domain/    @tayfa/core @tayfa/trust-safety
+/packages/db/src/schema/safety.ts   @tayfa/core @tayfa/trust-safety
+/packages/db/src/schema/geo.ts      @tayfa/core @tayfa/trust-safety
+/packages/db/sql/                @tayfa/core @tayfa/data @tayfa/trust-safety
+
+# ---- Apps (added by feature teams) ------------------------------------------
+/apps/web/                      @tayfa/web
+/apps/mobile/                   @tayfa/mobile
+/apps/bff/                      @tayfa/platform @tayfa/trust-safety
+
+# ---- Infra & CI/CD: platform owns the pipeline and DB image ------------------
+/infra/                         @tayfa/platform
+/.github/                       @tayfa/platform
+/.github/workflows/             @tayfa/platform
+/.github/CODEOWNERS             @tayfa/core @tayfa/platform
+
+# ---- Compliance-sensitive root config ---------------------------------------
+/.env.example                   @tayfa/platform @tayfa/trust-safety
+/LICENSE                        @tayfa/core

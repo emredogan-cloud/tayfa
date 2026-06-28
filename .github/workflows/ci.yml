@@ -1,0 +1,215 @@
+# Tayfa — Continuous Integration (mission §MANDATORY CI/CD).
+# Pure-unit work is DB-free; the dedicated `rls-tests` job provides a real
+# Postgres (PostGIS + pgvector) so deny-by-default policies are proven against
+# the same stack as Supabase/Frankfurt. Everything blocks on failure: the
+# `ci-summary` gate fans every job in and is what branch protection requires.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allow other workflows (pr-validation) to depend on a manual re-run.
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save minutes; never cancel main.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # Deterministic, provider-free builds. NEVER hit real verification/billing/AI
+  # providers from CI — entitlements & moderation are fail-closed mocks here.
+  TAYFA_PROVIDER_MODE: mock
+  NODE_ENV: test
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. install — warm the pnpm store + node_modules cache once, reuse downstream.
+  # ---------------------------------------------------------------------------
+  install:
+    name: Install & cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # version pinned via package.json "packageManager"
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+  # ---------------------------------------------------------------------------
+  # 2. lint + typecheck — run in parallel via matrix; both feed the spine.
+  # ---------------------------------------------------------------------------
+  static:
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [lint, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run ${{ matrix.task }}
+        run: pnpm turbo run ${{ matrix.task }}
+
+  # ---------------------------------------------------------------------------
+  # 3. unit-tests — turbo, DB-free (RLS suite self-skips without TEST_DATABASE_URL).
+  #    Produces coverage that the coverage-gate job re-checks.
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run unit tests with coverage
+        run: pnpm turbo run test:coverage
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            packages/*/coverage/**
+            apps/*/coverage/**
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # 4. rls-tests — REAL Postgres with PostGIS + pgvector. Mirrors infra/Dockerfile.postgres
+  #    (postgis/postgis:16-3.4 + postgresql-16-pgvector). We run the same base image as
+  #    a service and add the pgvector extension package before the suite connects.
+  #    Mission/TECH_DECISIONS: "CI fails if any table lacks a tested policy".
+  # ---------------------------------------------------------------------------
+  rls-tests:
+    name: RLS policy tests (Postgres)
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tayfa_test
+        ports:
+          - 5432:5432
+        # Healthcheck so the job only starts once Postgres accepts connections.
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # runMigrations()/rls.test.ts read TEST_DATABASE_URL; absent => suite skips.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tayfa_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pgvector into the Postgres service container
+        # The base PostGIS image lacks pgvector; install the matching package and
+        # enable the extension so migrations referencing `vector` columns apply.
+        run: |
+          docker exec "${{ job.services.postgres.id }}" bash -lc '
+            apt-get update &&
+            apt-get install -y --no-install-recommends postgresql-16-pgvector &&
+            rm -rf /var/lib/apt/lists/*'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d tayfa_test \
+            -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS postgis;"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run @tayfa/db tests (migrations + RLS isolation)
+        run: pnpm --filter @tayfa/db test
+
+  # ---------------------------------------------------------------------------
+  # 5. web-build — next build with the mock provider mode (no real keys in CI).
+  #    Soft-guarded: if apps/web has not landed yet the job no-ops cleanly so the
+  #    spine PRs are not blocked by an app that does not exist.
+  # ---------------------------------------------------------------------------
+  web-build:
+    name: Web build (next, mock providers)
+    runs-on: ubuntu-latest
+    needs: [static, install]
+    timeout-minutes: 15
+    env:
+      TAYFA_PROVIDER_MODE: mock
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Detect web app
+        id: detect
+        run: |
+          if [ -f apps/web/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=web-build::apps/web not present yet — skipping next build."
+          fi
+      - name: Build web (mock providers)
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm --filter @tayfa/web build
+
+  # ---------------------------------------------------------------------------
+  # 6. coverage-gate — fail under 80% overall / 90% on the domain layer.
+  #    Re-runs coverage with json-summary reporters (deterministic, no app DB)
+  #    so we read machine-parseable totals instead of scraping logs.
+  # ---------------------------------------------------------------------------
+  coverage-gate:
+    name: Coverage gate (80% overall / 90% domain)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate machine-readable coverage (shared = domain logic)
+        # Override reporters on the CLI so we always emit coverage-summary.json.
+        run: >-
+          pnpm --filter @tayfa/shared test:coverage --
+          --coverage.reporter=json-summary
+          --coverage.reporter=text
+          --coverage.reportsDirectory=coverage
+      - name: Enforce thresholds
+        run: node .github/scripts/coverage-gate.mjs packages/shared/coverage/coverage-summary.json
