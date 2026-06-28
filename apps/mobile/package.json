@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@tayfa/shared": "workspace:*",
-    "@expo/vector-icons": "^14.0.4",
+    "@expo/vector-icons": "^15.1.1",
     "@sentry/react-native": "^6.10.0",
     "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "^5.62.11",
