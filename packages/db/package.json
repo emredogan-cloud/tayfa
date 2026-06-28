@@ -1,0 +1,33 @@
+{
+  "name": "@tayfa/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Single source of truth for the data layer: Drizzle schema (typed query layer) + authoritative SQL (extensions, enums, tables, indexes, RLS deny-by-default + FORCE, functions). PostGIS + pgvector. EU/Frankfurt residency.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts",
+    "test": "vitest run",
+    "test:rls": "vitest run rls",
+    "lint": "eslint src",
+    "clean": "rm -rf dist coverage *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@tayfa/shared": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "h3-js": "^4.4.0",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
