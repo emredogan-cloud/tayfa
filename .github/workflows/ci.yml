@@ -103,46 +103,35 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
-  # 4. rls-tests — REAL Postgres with PostGIS + pgvector. Mirrors infra/Dockerfile.postgres
-  #    (postgis/postgis:16-3.4 + postgresql-16-pgvector). We run the same base image as
-  #    a service and add the pgvector extension package before the suite connects.
-  #    Mission/TECH_DECISIONS: "CI fails if any table lacks a tested policy".
+  # 4. rls-tests — REAL Postgres with PostGIS + pgvector. We BUILD the exact image
+  #    from infra/Dockerfile.postgres (postgis/postgis:16-3.4 + postgresql-16-pgvector)
+  #    and run it as a container, so the extension libraries and the server binary
+  #    are version-consistent (installing pgvector into an already-running service
+  #    skews them — `pg_trgm.so: undefined symbol`). This mirrors the local setup
+  #    that passes. Mission/TECH_DECISIONS: "CI fails if any table lacks a tested policy".
   # ---------------------------------------------------------------------------
   rls-tests:
     name: RLS policy tests (Postgres)
     runs-on: ubuntu-latest
     needs: install
     timeout-minutes: 15
-    services:
-      postgres:
-        image: postgis/postgis:16-3.4
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: tayfa_test
-        ports:
-          - 5432:5432
-        # Healthcheck so the job only starts once Postgres accepts connections.
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
     env:
       # runMigrations()/rls.test.ts read TEST_DATABASE_URL; absent => suite skips.
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tayfa_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:55432/tayfa_test
     steps:
       - uses: actions/checkout@v4
-      - name: Install pgvector into the Postgres service container
-        # The base PostGIS image lacks pgvector; install the matching package and
-        # enable the extension so migrations referencing `vector` columns apply.
+      - name: Build Postgres image (PostGIS + pgvector, version-consistent)
+        run: docker build -f infra/Dockerfile.postgres -t tayfa-postgres:ci infra
+      - name: Start Postgres
         run: |
-          docker exec "${{ job.services.postgres.id }}" bash -lc '
-            apt-get update &&
-            apt-get install -y --no-install-recommends postgresql-16-pgvector &&
-            rm -rf /var/lib/apt/lists/*'
-          PGPASSWORD=postgres psql -h localhost -U postgres -d tayfa_test \
-            -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS postgis;"
+          docker run -d --name tayfa-pg \
+            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=tayfa_test \
+            -p 55432:5432 tayfa-postgres:ci
+          for i in $(seq 1 30); do
+            if docker exec tayfa-pg pg_isready -U postgres >/dev/null 2>&1; then
+              echo "postgres ready after ${i}s"; break; fi
+            sleep 2
+          done
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

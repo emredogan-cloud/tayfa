@@ -1,0 +1,27 @@
+# Gitleaks config for Tayfa. Extends the default rules and allowlists the files
+# that legitimately contain PLACEHOLDER credential shapes (templates + docs), so
+# the scan blocks on REAL secrets without false-positiving on `eyJ...` / `sk-...`
+# examples. The real .env is git-ignored and never committed.
+title = "Tayfa gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Template + documentation files with placeholder secrets only"
+paths = [
+  '''\.env\.example$''',
+  '''.*\.example$''',
+  '''docs/ENVIRONMENT_SETUP\.md$''',
+  '''reports/.*''',
+  '''roadmaps/.*''',
+  '''mission\.(md|txt)$''',
+]
+# Common placeholder tokens that look like secrets but are not.
+regexes = [
+  '''eyJ\.\.\.''',
+  '''sk-proj-\.\.\.''',
+  '''phc_\.\.\.''',
+  '''YOUR-PROJECT''',
+  '''0{8}-0{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
+]
