@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Secrets — NEVER commit. Real keys live only in local .env / platform vaults.
+# ─────────────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+!.env.example
+secrets/
+
+# ── Dependencies ──
+node_modules/
+.pnpm-store/
+.yarn/
+.turbo/
+
+# ── Build output ──
+dist/
+build/
+out/
+.next/
+.expo/
+.expo-shared/
+web-build/
+*.tsbuildinfo
+coverage/
+.nyc_output/
+
+# ── Native / Expo / EAS ──
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# ── Generated assets cache (raw, pre-optimization) ──
+assets/generated/.cache/
+assets/generated/**/*.raw.png
+
+# ── Test / tooling artifacts ──
+*.log
+npm-debug.log*
+playwright-report/
+test-results/
+maestro-debug-output/
+.detoxrc.local.json
+
+# ── Editor / OS ──
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+*.swp
+
+# ── Supabase local ──
+supabase/.branches/
+supabase/.temp/

@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Pin the toolchain so CI and local match.
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - "esbuild"
+  - "sharp"

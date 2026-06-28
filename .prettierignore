@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+.expo
+.turbo
+coverage
+pnpm-lock.yaml
+*.md
+assets/generated
+reports
+roadmaps
+packages/db/src/rls/*.sql
+packages/db/src/migrations

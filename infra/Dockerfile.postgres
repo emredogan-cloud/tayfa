@@ -1,0 +1,6 @@
+# Local / CI Postgres for Tayfa: PostGIS + pgvector in one image (mirrors the
+# Supabase EU stack closely enough to run migrations and the RLS test suite).
+FROM postgis/postgis:16-3.4
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-16-pgvector \
+  && rm -rf /var/lib/apt/lists/*
