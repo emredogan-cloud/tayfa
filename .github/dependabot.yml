@@ -44,8 +44,10 @@ updates:
           - 'drizzle-orm'
           - 'drizzle-kit'
     ignore:
-      # Node engine is pinned to 24 via .nvmrc/engines; don't chase @types/node majors.
-      - dependency-name: '@types/node'
+      # Major bumps are NOT auto-proposed: this is a version-locked stack (Expo SDK
+      # 52 / RN 0.76 / Next 15 / React 19 must move together via a manual migration,
+      # not a Dependabot PR). Security updates still flow regardless of this rule.
+      - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
   # ---- GitHub Actions used in .github/workflows -------------------------------
