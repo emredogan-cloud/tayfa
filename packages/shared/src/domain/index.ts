@@ -7,6 +7,7 @@ export * from './nsm.js';
 export * from './reputation.js';
 export * from './entitlements.js';
 export * from './trial.js';
+export * from './monetization.js';
 export * from './referral.js';
 export * from './retention.js';
 export * from './moderation.js';
