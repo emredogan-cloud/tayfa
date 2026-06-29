@@ -56,9 +56,15 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
   **Real-when-keyed (Phase 6):** Braze lifecycle CRM (`BrazeLifecycleProvider` → real REST
   `/users/track`, EU endpoint, **fail-soft** no-op on outage). Caps are enforced by the domain
   (`decideLifecycleSend`) BEFORE enqueue, so a lifecycle send can never jump a frequency cap.
-  **Still mock pending keys:** Persona (ID/liveness), RevenueCat (billing), Hive/Rekognition
-  (image moderation), Expo Push, Braze (mock until `BRAZE_API_KEY` set); Inngest function bodies
-  (candidate-gen/re-embed, lifecycle journeys, streak rollup) are designed, not yet implemented.
+  **Real-when-keyed (Phase 7):** RevenueCat billing (`RevenueCatBillingProvider`) — webhook
+  authenticated by a **constant-time** secret compare then mapped through the tested
+  `revenueCatEventToStatus → reconcileEntitlement` pipeline (grace/retry keep access, refund
+  revokes); `getEntitlement` reads the live subscriber over REST. **Fail-closed** (bad/missing
+  signature or no-op event → no entitlement change; a read failure resolves to `free`).
+  **Still mock pending keys:** Persona (ID/liveness), Hive/Rekognition (image moderation),
+  Expo Push; Braze + RevenueCat are mock until their keys (`BRAZE_API_KEY` / `REVENUECAT_API_KEY`
+  + `REVENUECAT_WEBHOOK_SECRET`) are set. Inngest function bodies (candidate-gen/re-embed,
+  lifecycle journeys, streak rollup, trial lifecycle) are designed, not yet implemented.
   (Historical note below predates Phase 4.) The real
   Persona / RevenueCat / Hive / OpenAI / AI Gateway / Inngest / Upstash / Expo Push / Braze /
   Stripe adapters are interface-complete but not wired — they are drop-in behind the existing
