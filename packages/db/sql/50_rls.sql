@@ -20,6 +20,17 @@ BEGIN
   END LOOP;
 END $$;
 
+-- Idempotency: drop existing public policies before (re)creating them, so this
+-- migration can be re-applied to a non-fresh DB (CREATE POLICY has no OR REPLACE).
+DO $$
+DECLARE p record;
+BEGIN
+  FOR p IN SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', p.policyname, p.tablename);
+  END LOOP;
+END $$;
+
 -- Base table privileges (RLS still restricts which ROWS are visible).
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT INSERT, UPDATE, DELETE ON

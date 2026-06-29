@@ -2,6 +2,7 @@ import { latLngToCell } from 'h3-js';
 import { BEACHHEAD, GEOCELL_RESOLUTION } from '@tayfa/shared/constants';
 import { MockEmbeddingProvider } from '@tayfa/shared/adapters';
 import { createServiceClient } from './client.js';
+import { embedTextOpenAI } from './embed.js';
 import { city as cityTable, event as eventTable, interestTaxonomy } from './schema/index.js';
 
 /**
@@ -58,7 +59,23 @@ const EVENT_TEMPLATES = [
 
 export async function seed(connectionString: string): Promise<void> {
   const { db, sql } = createServiceClient(connectionString);
-  const embedder = new MockEmbeddingProvider();
+  // Prefer the REAL OpenAI embedding when OPENAI_API_KEY is set (production
+  // pipeline); fall back to the deterministic mock for keyless dev / CI.
+  const mock = new MockEmbeddingProvider();
+  let realEmbedFailed = false;
+  const embed = async (text: string): Promise<number[]> => {
+    if (realEmbedFailed) return mock.embed(text);
+    try {
+      return (await embedTextOpenAI(text)) ?? (await mock.embed(text));
+    } catch (e) {
+      // Graceful fallback (mission §P4: never crash). e.g. OpenAI quota/outage.
+      realEmbedFailed = true;
+      console.warn(
+        `! real embedding unavailable (${(e as Error).message.slice(0, 80)}); using mock`,
+      );
+      return mock.embed(text);
+    }
+  };
   try {
     // City.
     const [istanbul] = await db
@@ -74,7 +91,7 @@ export async function seed(connectionString: string): Promise<void> {
 
     // Taxonomy with deterministic embeddings.
     for (const t of TAXONOMY) {
-      const embedding = await embedder.embed(`${t.domain} ${t.label}`);
+      const embedding = await embed(`${t.domain} ${t.label}`);
       await db
         .insert(interestTaxonomy)
         .values({ domain: t.domain, label: t.label, slug: slugify(t.label), embedding })
@@ -98,7 +115,7 @@ export async function seed(connectionString: string): Promise<void> {
       const geocell = latLngToCell(lat, lng, GEOCELL_RESOLUTION);
       const starts = new Date(Date.now() + (i + 1) * 6 * 60 * 60 * 1000);
       const ends = new Date(starts.getTime() + 2 * 60 * 60 * 1000);
-      const embedding = await embedder.embed(`${tmpl.category} ${tmpl.title}`);
+      const embedding = await embed(`${tmpl.category} ${tmpl.title}`);
       await db.insert(eventTable).values({
         hostId,
         title: tmpl.title,

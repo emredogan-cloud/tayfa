@@ -35,6 +35,13 @@ export const env = {
   redisUrl: () => read('UPSTASH_REDIS_REST_URL'),
   redisToken: () => read('UPSTASH_REDIS_REST_TOKEN'),
 
+  // AI: OpenAI (embeddings, text moderation) + Vercel AI Gateway (Claude Haiku
+  // generation). Generation prefers the gateway when keyed, else OpenAI, else a
+  // template fallback. Embeddings + text moderation use OpenAI directly.
+  openaiApiKey: () => read('OPENAI_API_KEY'),
+  aiGatewayApiKey: () => read('AI_GATEWAY_API_KEY'),
+  aiGatewayBaseUrl: () => read('AI_GATEWAY_BASE_URL') ?? 'https://ai-gateway.vercel.sh/v1',
+
   // PostHog (analytics, EU cloud)
   posthogKey: () => read('POSTHOG_KEY') ?? read('NEXT_PUBLIC_POSTHOG_KEY'),
   posthogHost: () => read('NEXT_PUBLIC_POSTHOG_HOST') ?? 'https://eu.i.posthog.com',
@@ -44,6 +51,9 @@ export const env = {
   revenueCatApiKey: () => read('REVENUECAT_API_KEY'),
   personaWebhookSecret: () => read('PERSONA_WEBHOOK_SECRET'),
   personaApiKey: () => read('PERSONA_API_KEY'),
+
+  // Expo push (transactional notifications)
+  expoAccessToken: () => read('EXPO_ACCESS_TOKEN'),
 
   // T&S console access — comma-separated allowlist of moderator user ids.
   moderatorUserIds: (): readonly string[] =>

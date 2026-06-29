@@ -12,6 +12,7 @@ import {
 } from '@tayfa/shared/adapters';
 import type { VerificationLevel } from '@tayfa/shared/types';
 import { env, providerMode } from './env.js';
+import { embedText, generateIcebreakers, moderateTextOpenAI } from './ai.js';
 
 /**
  * Provider wiring (mission §AUTONOMY: interface → mock → production adapter →
@@ -60,17 +61,23 @@ class PersonaVerificationProvider implements VerificationProvider {
   }
 }
 
-/** Moderation. Fail-closed: any error/missing config → `flagged: true` (hold). */
-class HiveModerationProvider implements ModerationProvider {
+/**
+ * Moderation. Text is REAL (OpenAI Moderation API). Fail-closed: any error or
+ * missing config → `flagged: true` (hold), never silently pass (RISK §fail-safe).
+ * Image NSFW/face checks need Hive/Rekognition (not wired) → fail-closed.
+ */
+class OpenAiModerationProvider implements ModerationProvider {
   async moderateText(text: string): Promise<ModerationVerdict> {
-    void text;
-    // Real adapter: OpenAI Moderation API for text. On outage we DENY (hold).
-    return { flagged: true, confidence: 1, categories: ['provider_unavailable'] };
+    try {
+      return await moderateTextOpenAI(text);
+    } catch {
+      return { flagged: true, confidence: 1, categories: ['provider_unavailable'] };
+    }
   }
 
   async moderateImage(imageUrl: string): Promise<ModerationVerdict> {
     void imageUrl;
-    // Real adapter: Hive / Rekognition NSFW + face checks. On outage we DENY.
+    // Real adapter pending Hive/Rekognition keys. Until then we DENY (hold).
     return { flagged: true, confidence: 1, categories: ['provider_unavailable'] };
   }
 }
@@ -92,20 +99,21 @@ class RevenueCatBillingProvider implements BillingProvider {
   }
 }
 
+/** REAL embeddings — OpenAI text-embedding-3-small (1536-d, cosine). */
 class OpenAiEmbeddingProvider implements EmbeddingProvider {
   async embed(text: string): Promise<number[]> {
-    void text;
-    throw new ProviderNotConfiguredError('OpenAI embeddings', 'OPENAI_API_KEY + SDK integration');
+    return embedText(text);
   }
 }
 
+/** REAL generation — AI Gateway (Claude Haiku) or OpenAI; fails OPEN to templates. */
 class GatewayGenerativeProvider implements GenerativeProvider {
   async icebreakers(input: {
     sharedInterests: readonly string[];
     count: number;
   }): Promise<string[]> {
-    void input;
-    throw new ProviderNotConfiguredError('AI Gateway', 'AI_GATEWAY_API_KEY + SDK integration');
+    const { icebreakers } = await generateIcebreakers(input.sharedInterests, input.count);
+    return icebreakers;
   }
 }
 
@@ -121,15 +129,32 @@ class ExpoPushProvider implements PushProvider {
   }
 }
 
-function createProductionProviders(): Providers {
+/**
+ * Per-provider hybrid wiring (mission §"replace mocks" + §AUTONOMY): each provider
+ * is its REAL adapter when its env key is present, and the deterministic mock
+ * otherwise. So production paths activate the moment a key appears, while keyless
+ * dev + CI stay fully mocked. `TAYFA_PROVIDER_MODE=mock` (the .env / CI default)
+ * is a HARD override that forces every provider to mock for determinism.
+ */
+function buildProviders(): Providers {
+  const mock = createMockProviders();
+  if (process.env.TAYFA_PROVIDER_MODE === 'mock') return mock;
+
+  const hasOpenAi = Boolean(env.openaiApiKey());
+  const hasGen = hasOpenAi || Boolean(env.aiGatewayApiKey());
+  const hasPersona = Boolean(env.personaApiKey());
+  const hasRevenueCat = Boolean(env.revenueCatApiKey());
+  const hasExpo = Boolean(env.expoAccessToken());
+  const anyReal = hasOpenAi || hasGen || hasPersona || hasRevenueCat || hasExpo;
+
   return {
-    mode: 'production',
-    verification: new PersonaVerificationProvider(),
-    moderation: new HiveModerationProvider(),
-    billing: new RevenueCatBillingProvider(),
-    embeddings: new OpenAiEmbeddingProvider(),
-    generative: new GatewayGenerativeProvider(),
-    push: new ExpoPushProvider(),
+    mode: providerMode() === 'production' || anyReal ? 'production' : 'mock',
+    verification: hasPersona ? new PersonaVerificationProvider() : mock.verification,
+    moderation: hasOpenAi ? new OpenAiModerationProvider() : mock.moderation,
+    billing: hasRevenueCat ? new RevenueCatBillingProvider() : mock.billing,
+    embeddings: hasOpenAi ? new OpenAiEmbeddingProvider() : mock.embeddings,
+    generative: hasGen ? new GatewayGenerativeProvider() : mock.generative,
+    push: hasExpo ? new ExpoPushProvider() : mock.push,
   };
 }
 
@@ -138,6 +163,6 @@ let cached: Providers | null = null;
 /** Get the active provider bundle. Memoised for the function's warm lifetime. */
 export function createProviders(): Providers {
   if (cached) return cached;
-  cached = providerMode() === 'mock' ? createMockProviders() : createProductionProviders();
+  cached = buildProviders();
   return cached;
 }
