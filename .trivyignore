@@ -1,0 +1,21 @@
+# Trivy ignore list — keep in sync with pnpm `auditConfig.ignoreGhsas` (package.json).
+#
+# These are all advisories for `tar` reached ONLY via apps/mobile > expo > @expo/cli > tar
+# (the Expo build CLI, a BUILD-TIME dev tool — it is NOT shipped in the mobile app
+# bundle or any runtime). @expo/cli requires tar's v6 API, so we cannot bump to the
+# patched tar >=7.5.x without breaking `expo prebuild`. Accepted, build-tool-only risk.
+# Re-evaluate when @expo/cli supports tar 7.
+#
+# node-tar (path traversal / arbitrary file write family):
+CVE-2026-23745
+CVE-2026-23950
+CVE-2026-24842
+CVE-2026-26960
+CVE-2026-29786
+CVE-2026-31802
+GHSA-67mh-4wv8-2f99
+GHSA-8988-4f7v-96qf
+GHSA-h67p-54hq-rp68
+GHSA-qx2v-qp2m-jg93
+GHSA-vmf3-w455-68vh
+GHSA-w5hq-g745-h8pq

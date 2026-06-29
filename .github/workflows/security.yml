@@ -95,6 +95,7 @@ jobs:
       - name: Trivy fs scan (SARIF, non-blocking upload)
         run: |
           trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile .trivyignore \
             --skip-dirs node_modules --skip-dirs assets --skip-dirs .git \
             --format sarif --output trivy-results.sarif . || true
       - name: Upload Trivy SARIF
@@ -107,6 +108,7 @@ jobs:
       - name: Trivy fs scan (fail on HIGH/CRITICAL)
         run: |
           trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile .trivyignore \
             --skip-dirs node_modules --skip-dirs assets --skip-dirs .git \
             --exit-code 1 .
 
