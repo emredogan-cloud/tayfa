@@ -35,13 +35,15 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
 
 ## 2. What is built and compiles vs. what is runtime-validated
 
-- **`apps/mobile` (Expo / React Native) — BUILT, typecheck-green, NOT device-validated.**
+- **`apps/mobile` (Expo / React Native) — BUILT, typecheck-green, device-RUN-validated.**
   The Expo Router screens (auth/OTP/age-gate, onboarding taste-cards + consent + profile,
   feed/create/crews/profile tabs, event detail, group chat, safety center, paywall), the
   NativeWind design system, and the React Query/Zustand wiring are implemented and pass
-  `tsc --noEmit` against the spine. They have **not** been run on a device/emulator (see §4)
-  and the React Query hooks expect a running BFF — so the screens are structurally complete
-  but not yet exercised end-to-end at runtime.
+  `tsc --noEmit` against the spine. They were **validated on a physical Xiaomi (Android 13)**
+  in the P1–P3 device pass (`DEVICE_VALIDATION_REPORT.md`, 20 screens), and the full **P1–P9**
+  bundle was **re-validated on-device during P9** (2095 modules incl. the P4–P9 `@tayfa/shared`
+  domain build + render the auth entry — `PHASE_9_DEVICE_REPORT.md`). Deeper screen-by-screen
+  re-runs of the unchanged surfaces still require a BFF + seeded DB pointed at the device.
 - **`apps/web` (Next.js App Router + BFF) — BUILT, typecheck + production build green.**
   All BFF Route Handlers, middleware (auth · geo · rate-limit · BotID hook), the moderation
   console, and the landing/OG/KVKK/legal pages are implemented; `next build` succeeds in mock
@@ -78,12 +80,19 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
   Realtime → **Stream** chat migration (dual-write→cutover), Cloudflare R2 + CDN media, and
   BigQuery + dbt models — plus the **100× load test, chaos drills, chat-migration integrity
   test, and DR restore** require a real staging environment and are **NOT done**. Not claimed.
-- **P4–P8 (matching depth, full T&S, retention/virality, monetization, scale).**
+- **P9 marketplace is domain + BFF, not financial integration.** P9 ships the *pure decisions*
+  (payout split in integer minor units, host pro-tools + KYC-gated payout eligibility, the
+  sponsored-content policy engine — "sponsored ≠ unsafe", ambassador anti-collusion rewards —
+  `domain/marketplace.ts`, tested). **Stripe Connect payouts + host KYC, B2B2C DPAs/tenant
+  isolation, and any governed partner API are NOT built** — they need real Stripe/legal surfaces;
+  a `kyc_complete` flag + marketplace tables (ticket/payout/sponsor) are designed, not migrated.
+- **P4–P9 (matching, full T&S, retention/virality, monetization, scale, marketplace).**
   Domain logic + real-when-keyed adapters are implemented and tested; remaining gaps are the
-  durable-workflow bodies (Inngest), unkeyed live providers, and the P8 infra/IaC above. The
-  entitlement model, trial logic, referral state machine, reputation, notification policy,
-  pricing, retention, monetization, and expansion/scale guards exist as tested domain
-  primitives — later wiring drops in without refactor.
+  durable-workflow bodies (Inngest), unkeyed live providers, the P8 infra/IaC, and the P9
+  financial/legal surfaces above. The entitlement model, trial logic, referral state machine,
+  reputation, notification policy, pricing, retention, monetization, expansion/scale guards, and
+  marketplace economics all exist as tested domain primitives — later wiring drops in without
+  refactor.
 
 ---
 
