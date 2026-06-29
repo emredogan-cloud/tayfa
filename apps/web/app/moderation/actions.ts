@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { schema } from '@tayfa/db';
 import { MODERATION_ACTIONS } from '@tayfa/shared/types';
+import { appealReversesAction, transitionAppeal } from '@tayfa/shared/domain';
+import { isErr } from '@tayfa/shared/types';
 import { getSession } from '@/lib/auth.js';
 import { getServiceDb } from '@/lib/db.js';
 
@@ -75,6 +77,80 @@ export async function resolveReport(formData: FormData): Promise<void> {
       actorUserId: session.userId,
       actorType: 'human',
       action: `moderation.${input.decision}`,
+      targetType: report.targetType,
+      targetId: report.targetId,
+      metadata: { reportId: report.id, rationale: input.rationale ?? null },
+    });
+  });
+
+  revalidatePath('/moderation');
+  redirect('/moderation');
+}
+
+const appealSchema = z.object({
+  reportId: z.uuid(),
+  decision: z.enum(['uphold', 'overturn']),
+  rationale: z.string().trim().max(1000).optional(),
+});
+
+/**
+ * Server Action: resolve an APPEALED report (RISK_ANALYSIS §appeals — protect the
+ * falsely-accused). Uses the tested appeal state machine. `overturn` reverses the
+ * enforcement (records a `clear` action + sets the report `dismissed`); `uphold`
+ * keeps it `actioned`. Both write an immutable audit row.
+ */
+export async function resolveAppeal(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session?.isModerator) {
+    throw new Error('Forbidden: Trust & Safety console is restricted');
+  }
+
+  const input = appealSchema.parse({
+    reportId: formData.get('reportId'),
+    decision: formData.get('decision'),
+    rationale: formData.get('rationale') || undefined,
+  });
+
+  const db = getServiceDb();
+  await db.transaction(async (tx) => {
+    const [report] = await tx
+      .select({
+        id: schema.report.id,
+        status: schema.report.status,
+        targetType: schema.report.targetType,
+        targetId: schema.report.targetId,
+      })
+      .from(schema.report)
+      .where(eq(schema.report.id, input.reportId))
+      .limit(1);
+    if (!report) throw new Error('Report not found');
+    if (report.status !== 'appealed') throw new Error('Report is not under appeal');
+
+    const next = transitionAppeal('appealed', input.decision === 'uphold' ? 'uphold' : 'overturn');
+    if (isErr(next)) throw new Error('Illegal appeal transition');
+    const reversed = appealReversesAction(next.value);
+
+    if (reversed) {
+      // Overturn → reverse the enforcement with a logged `clear`.
+      await tx.insert(schema.moderationAction).values({
+        reportId: report.id,
+        targetUserId: report.targetType === 'user' ? report.targetId : null,
+        actor: 'human',
+        action: 'clear',
+        rationale: input.rationale ?? 'Appeal overturned',
+        confidence: null,
+      });
+    }
+
+    await tx
+      .update(schema.report)
+      .set({ status: reversed ? 'dismissed' : 'actioned', updatedAt: new Date() })
+      .where(eq(schema.report.id, report.id));
+
+    await tx.insert(schema.auditLog).values({
+      actorUserId: session.userId,
+      actorType: 'human',
+      action: `moderation.appeal.${input.decision}`,
       targetType: report.targetType,
       targetId: report.targetId,
       metadata: { reportId: report.id, rationale: input.rationale ?? null },

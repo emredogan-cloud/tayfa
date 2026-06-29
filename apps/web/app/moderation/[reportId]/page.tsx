@@ -6,7 +6,7 @@ import { schema } from '@tayfa/db';
 import { MODERATION_ACTIONS } from '@tayfa/shared/types';
 import { getServiceDb } from '@/lib/db.js';
 import { requireConsoleAccess } from '../access.js';
-import { resolveReport } from '../actions.js';
+import { resolveAppeal, resolveReport } from '../actions.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,6 +175,48 @@ export default async function ReportDetailPage({
               Reversible decisions only. Bans go through a second-reviewer flow in production.
             </p>
           </form>
+
+          {report.status === 'appealed' ? (
+            <form
+              action={resolveAppeal}
+              className="mt-4 space-y-4 rounded-2xl border border-ember/30 bg-cream p-6 shadow-card"
+            >
+              <h2 className="text-sm font-bold uppercase tracking-wide text-ember">
+                Resolve appeal
+              </h2>
+              <p className="text-xs text-ink-muted">
+                The member appealed this enforcement. Overturning reverses it (logged as a cleared
+                action); upholding keeps it in force. Either way it&apos;s audited.
+              </p>
+              <input type="hidden" name="reportId" value={report.id} />
+              <label className="block text-sm font-medium">
+                Appeal decision
+                <select
+                  name="decision"
+                  defaultValue="uphold"
+                  className="mt-1 w-full rounded-xl border border-ink/15 bg-cream px-3 py-2 text-sm"
+                >
+                  <option value="uphold">Uphold (action stands)</option>
+                  <option value="overturn">Overturn (reverse action)</option>
+                </select>
+              </label>
+              <label className="block text-sm font-medium">
+                Rationale
+                <textarea
+                  name="rationale"
+                  rows={3}
+                  placeholder="Why this appeal outcome (recorded in the audit log)…"
+                  className="mt-1 w-full rounded-xl border border-ink/15 bg-cream px-3 py-2 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-ember px-4 py-3 text-sm font-semibold text-cream transition hover:opacity-90"
+              >
+                Resolve appeal
+              </button>
+            </form>
+          ) : null}
         </aside>
       </div>
     </main>
