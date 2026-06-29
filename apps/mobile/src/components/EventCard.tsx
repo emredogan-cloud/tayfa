@@ -106,7 +106,8 @@ export function EventCard({ event, onPress }: EventCardProps): React.ReactElemen
             {whyText(event)}
           </Text>
           <Text variant="footnote" className="text-ink-subtle">
-            Interest match {Math.round(event.ranking.interestSimilarity * 100)}% ·{' '}
+            Interest match{' '}
+            {Math.max(0, Math.min(100, Math.round(event.ranking.interestSimilarity * 100)))}% ·{' '}
             {formatDistance(event.ranking.distanceMeters)} · soonness boost
           </Text>
         </View>

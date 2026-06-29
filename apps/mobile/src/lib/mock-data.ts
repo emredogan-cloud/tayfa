@@ -92,16 +92,20 @@ const profile = (
   sharedInterests: (opts.interests ?? []).map(findInterest),
 });
 
-const ranking = (score: number, distanceMeters: number, mutual: number): RankingExplanation => ({
-  score,
-  interestSimilarity: score - 0.05,
-  distanceMeters,
-  distanceScore: 1 / (1 + distanceMeters / 5000),
-  recencyScore: 0.8,
-  capacityScore: 0.85,
-  serendipity: 0.15,
-  mutualInterestCount: mutual,
-});
+const ranking = (score: number, distanceMeters: number, mutual: number): RankingExplanation => {
+  // Keep every score in the valid [0,1] band — real rankings never go negative.
+  const s = Math.max(0, Math.min(1, score));
+  return {
+    score: s,
+    interestSimilarity: Math.max(0, s - 0.05),
+    distanceMeters,
+    distanceScore: 1 / (1 + distanceMeters / 5000),
+    recencyScore: 0.8,
+    capacityScore: 0.85,
+    serendipity: 0.15,
+    mutualInterestCount: mutual,
+  };
+};
 
 const hoursFromNow = (h: number): string => {
   // Deterministic-ish: base on a fixed epoch + offset (no Date.now sensitivity needed for UI).
@@ -143,7 +147,8 @@ const event = (
   venueName: opts.neighborhood,
   sharedInterests: opts.interests.map(findInterest),
   host,
-  ranking: ranking(0.92 - n * 0.01, opts.distance, opts.interests.length),
+  // Sane, descending demo scores in [0,1] (n is a large uid seed, so derive a small step).
+  ranking: ranking(0.95 - ((n - 200) % 8) * 0.06, opts.distance, opts.interests.length),
 });
 
 const HOSTS = {
@@ -238,7 +243,9 @@ const eventDetail = (id: string): EventDetail => {
       { profile: HOSTS.ece, rsvpStatus: 'going', isHost: false },
       { profile: HOSTS.burak, rsvpStatus: 'approved', isHost: false },
     ],
-    viewerRsvpStatus: null,
+    // Dev mock: viewer is a confirmed member so the member experience (group
+    // chat, leave) is walkable on device. A real BFF echoes the live RSVP state.
+    viewerRsvpStatus: 'going',
     preciseLocation: null, // released only by the BFF gate near start time
     viewerIsHost: false,
   };
