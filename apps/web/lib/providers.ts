@@ -12,8 +12,22 @@ import {
   type VerificationProvider,
 } from '@tayfa/shared/adapters';
 import type { VerificationLevel } from '@tayfa/shared/types';
+import {
+  reconcileEntitlement,
+  revenueCatEventToStatus,
+  type BillingStatus,
+} from '@tayfa/shared/domain';
+import { timingSafeEqual } from 'node:crypto';
 import { env, providerMode } from './env.js';
 import { embedText, generateIcebreakers, moderateTextOpenAI } from './ai.js';
+
+/** Constant-time string compare that never throws on length mismatch. */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  return timingSafeEqual(ba, bb);
+}
 
 /**
  * Provider wiring (mission §AUTONOMY: interface → mock → production adapter →
@@ -83,20 +97,73 @@ class OpenAiModerationProvider implements ModerationProvider {
   }
 }
 
-/** RevenueCat — the server-side source of truth for entitlements. */
+/**
+ * RevenueCat — the server-side source of truth for entitlements. REAL when keyed.
+ *
+ * `getEntitlement` reads the live subscriber via the REST API. `resolveWebhook`
+ * authenticates the call with the configured Authorization secret (constant-time),
+ * then maps the event through the tested `revenueCatEventToStatus` →
+ * `reconcileEntitlement` pipeline. Fail-closed: no secret, a mismatched signature,
+ * or an unparseable/no-op event all yield `null` — never a silent entitlement grant.
+ */
 class RevenueCatBillingProvider implements BillingProvider {
   async getEntitlement(userId: string): Promise<EntitlementSnapshot> {
     const apiKey = env.revenueCatApiKey();
     if (!apiKey) throw new ProviderNotConfiguredError('RevenueCat', 'REVENUECAT_API_KEY');
-    void userId;
-    throw new ProviderNotConfiguredError('RevenueCat getEntitlement', 'RevenueCat SDK integration');
+    const res = await fetch(
+      `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`,
+      { headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' } },
+    );
+    if (!res.ok) {
+      // Conservative: a billing read failure must not upgrade anyone.
+      return { userId, entitlement: 'free', inTrial: false, renewsAt: null };
+    }
+    const body = (await res.json()) as {
+      subscriber?: {
+        entitlements?: Record<string, { expires_date?: string | null; period_type?: string }>;
+      };
+    };
+    const ent = body.subscriber?.entitlements?.['tayfa_plus'];
+    const renewsAt = ent?.expires_date ?? null;
+    const activeNow = Boolean(ent) && (!renewsAt || new Date(renewsAt).getTime() > Date.now());
+    return {
+      userId,
+      entitlement: activeNow ? 'tayfa_plus' : 'free',
+      inTrial: ent?.period_type === 'trial' || ent?.period_type === 'intro',
+      renewsAt: activeNow ? renewsAt : null,
+    };
   }
 
   async resolveWebhook(payload: unknown, signature: string): Promise<EntitlementSnapshot | null> {
     const secret = env.revenueCatWebhookSecret();
-    if (!secret || !signature) return null; // invalid signature → reject
-    void payload;
-    return null;
+    // Fail-closed: can't authenticate → reject. RevenueCat sends the configured
+    // value verbatim in the Authorization header (optionally "Bearer <secret>").
+    if (!secret || !signature) return null;
+    const presented = signature.replace(/^Bearer\s+/i, '');
+    if (!safeEqual(presented, secret)) return null;
+
+    const event = (payload as { event?: Record<string, unknown> })?.event;
+    if (!event || typeof event !== 'object') return null;
+    const userId = (event['app_user_id'] ?? event['original_app_user_id']) as string | undefined;
+    if (!userId) return null;
+
+    const status: BillingStatus | null = revenueCatEventToStatus(
+      String(event['type'] ?? ''),
+      typeof event['period_type'] === 'string' ? (event['period_type'] as string) : undefined,
+    );
+    if (status === null) return null; // no-op event (e.g. TRANSFER) → no state change
+
+    const reconciled = reconcileEntitlement(status);
+    const expiryMs = event['expiration_at_ms'];
+    return {
+      userId,
+      entitlement: reconciled.entitlement,
+      inTrial: reconciled.inTrial,
+      renewsAt:
+        reconciled.entitlement === 'tayfa_plus' && typeof expiryMs === 'number'
+          ? new Date(expiryMs).toISOString()
+          : null,
+    };
   }
 }
 
