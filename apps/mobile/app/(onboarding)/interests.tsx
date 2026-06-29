@@ -100,6 +100,7 @@ export default function InterestsScreen(): React.ReactElement {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        className="grow-0"
         contentContainerClassName="gap-2 px-5 pb-3"
       >
         <Chip label="All" selected={domain === null} onPress={() => setDomain(null)} />

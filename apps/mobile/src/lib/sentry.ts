@@ -6,15 +6,24 @@ import { ENV, isConfigured } from './env';
  * (mock/dev). PII is scrubbed by default; we never attach precise location or
  * message bodies to events.
  */
+let started = false;
+
 export function initSentry(): void {
-  if (!isConfigured.sentry) return;
+  if (started) return;
+  started = true;
+  // Always init (so the root `Sentry.wrap` has an initialized client and does not
+  // warn) but stay DISABLED when no DSN is set — no events leave the device in
+  // mock/dev. PII is never attached (no precise location or message bodies).
   Sentry.init({
-    dsn: ENV.sentryDsn,
+    dsn: isConfigured.sentry ? ENV.sentryDsn : undefined,
+    enabled: isConfigured.sentry,
     tracesSampleRate: 0.2,
-    // Don't ship breadcrumbs that could carry user content.
     sendDefaultPii: false,
-    enableAutoSessionTracking: true,
+    enableAutoSessionTracking: isConfigured.sentry,
   });
 }
+
+// Initialize at module load so it runs before `Sentry.wrap` at the app root.
+initSentry();
 
 export { Sentry };

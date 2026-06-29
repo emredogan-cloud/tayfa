@@ -1,4 +1,7 @@
 import { ENV } from './env';
+import { getMockResponse } from './mock-data';
+
+declare const __DEV__: boolean;
 
 /**
  * Typed fetch client for the Tayfa BFF. The BFF is the ONLY backend the app
@@ -6,6 +9,10 @@ import { ENV } from './env';
  * request, enforces entitlements server-side (RevenueCat), and gates precise
  * location. The client therefore stays dumb: attach the auth token, send JSON,
  * surface typed errors.
+ *
+ * Dev affordance: when the BFF is unreachable AND this is a __DEV__ build, we
+ * fall back to canned mock data (mock-data.ts) so the app is fully walkable for
+ * local/device validation. Never runs in release; a real response always wins.
  */
 
 export class ApiError extends Error {
@@ -67,6 +74,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       signal: signal ?? null,
     });
   } catch (cause) {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      const mock = getMockResponse(method, path);
+      if (mock !== undefined) return mock as T;
+    }
     throw new ApiError(0, 'Network request failed. Check your connection.', 'network_error', cause);
   }
 
