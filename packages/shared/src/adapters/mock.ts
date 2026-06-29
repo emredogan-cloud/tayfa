@@ -5,6 +5,7 @@ import type {
   BillingProvider,
   EmbeddingProvider,
   GenerativeProvider,
+  LifecycleProvider,
   ModerationProvider,
   ModerationVerdict,
   Providers,
@@ -122,6 +123,18 @@ export class MockPushProvider implements PushProvider {
   }
 }
 
+/** No-op lifecycle CRM (Braze) for tests/mock mode; records enqueues for assertions. */
+export class MockLifecycleProvider implements LifecycleProvider {
+  public readonly enqueued: { userId: string; journey: string }[] = [];
+  async enqueue(input: { userId: string; journey: string }) {
+    this.enqueued.push({ userId: input.userId, journey: input.journey });
+    return { accepted: true };
+  }
+  async syncAudience(): Promise<void> {
+    /* no-op in mock */
+  }
+}
+
 /** No-op analytics for tests/mock mode (consent-gated in real clients). */
 export class MockAnalyticsClient implements AnalyticsClient {
   public readonly captured: { distinctId: string; name: string; props: Record<string, unknown> }[] =
@@ -143,5 +156,6 @@ export function createMockProviders(): Providers {
     embeddings: new MockEmbeddingProvider(),
     generative: new MockGenerativeProvider(),
     push: new MockPushProvider(),
+    lifecycle: new MockLifecycleProvider(),
   };
 }

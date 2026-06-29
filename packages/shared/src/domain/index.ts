@@ -8,6 +8,7 @@ export * from './reputation.js';
 export * from './entitlements.js';
 export * from './trial.js';
 export * from './referral.js';
+export * from './retention.js';
 export * from './moderation.js';
 export * from './safety.js';
 export * from './notifications.js';

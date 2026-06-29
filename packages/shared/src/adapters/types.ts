@@ -82,6 +82,18 @@ export interface AnalyticsClient {
   identify(distinctId: string, props: Record<string, unknown>): void;
 }
 
+// ── Lifecycle CRM (Braze / Customer.io) ───────────────────────────────────────
+export interface LifecycleProvider {
+  /** Enqueue a lifecycle message into a CRM journey (cap-checked BEFORE calling). */
+  enqueue(input: {
+    userId: string;
+    journey: string;
+    payload?: Record<string, unknown>;
+  }): Promise<{ accepted: boolean }>;
+  /** Reverse-ETL: sync a user's audience attributes for journey targeting. */
+  syncAudience(userId: string, attributes: Record<string, unknown>): Promise<void>;
+}
+
 export interface Providers {
   readonly mode: ProviderMode;
   readonly verification: VerificationProvider;
@@ -90,4 +102,5 @@ export interface Providers {
   readonly embeddings: EmbeddingProvider;
   readonly generative: GenerativeProvider;
   readonly push: PushProvider;
+  readonly lifecycle: LifecycleProvider;
 }
