@@ -2,6 +2,7 @@ export * from './geo-distance.js';
 export * from './location-privacy.js';
 export * from './rsvp-state-machine.js';
 export * from './ranking.js';
+export * from './recommendation.js';
 export * from './nsm.js';
 export * from './reputation.js';
 export * from './entitlements.js';
