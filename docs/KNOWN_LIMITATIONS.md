@@ -53,9 +53,13 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
   **REAL and wired:** OpenAI embeddings (`text-embedding-3-small`), generative icebreakers
   (AI Gateway/Claude Haiku → OpenAI → template), OpenAI text moderation. Their *live* calls
   are currently gated by the **OpenAI account quota (HTTP 429)** — code is real and ready.
+  **Real-when-keyed (Phase 6):** Braze lifecycle CRM (`BrazeLifecycleProvider` → real REST
+  `/users/track`, EU endpoint, **fail-soft** no-op on outage). Caps are enforced by the domain
+  (`decideLifecycleSend`) BEFORE enqueue, so a lifecycle send can never jump a frequency cap.
   **Still mock pending keys:** Persona (ID/liveness), RevenueCat (billing), Hive/Rekognition
-  (image moderation), Expo Push; Inngest function bodies (candidate-gen/re-embed) are designed,
-  not yet implemented. (Historical note below predates Phase 4.) The real
+  (image moderation), Expo Push, Braze (mock until `BRAZE_API_KEY` set); Inngest function bodies
+  (candidate-gen/re-embed, lifecycle journeys, streak rollup) are designed, not yet implemented.
+  (Historical note below predates Phase 4.) The real
   Persona / RevenueCat / Hive / OpenAI / AI Gateway / Inngest / Upstash / Expo Push / Braze /
   Stripe adapters are interface-complete but not wired — they are drop-in behind the existing
   `Providers` interface (`TAYFA_PROVIDER_MODE`).
