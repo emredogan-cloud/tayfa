@@ -71,11 +71,19 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
   `Providers` interface (`TAYFA_PROVIDER_MODE`).
 - **Inngest functions.** The event names and step semantics are designed (roadmap §4); the
   durable function bodies live with the BFF and are pending.
-- **P4–P9 (matching depth, full T&S, retention/virality, monetization, scale, marketplace).**
-  These are **drop-in foundations, not full implementations**: the entitlement model, trial
-  logic, referral state machine, reputation, notification policy, pricing, and chat-migration
-  plan all exist as tested domain primitives so later phases drop in without refactor — but
-  the phase *surfaces* are not built.
+- **P8 scale infra is operational, not app code.** P8 ships the *pure decisions* (city
+  liquidity, ghost-town guard, city-launch go/no-go, travel mode, AI cost guard, message
+  archival, SLO checks — all in `domain/expansion.ts` + `domain/scale.ts`, tested). The infra
+  it gates — Postgres read replicas, `message`/`event` time-partitioning DDL, the Supabase
+  Realtime → **Stream** chat migration (dual-write→cutover), Cloudflare R2 + CDN media, and
+  BigQuery + dbt models — plus the **100× load test, chaos drills, chat-migration integrity
+  test, and DR restore** require a real staging environment and are **NOT done**. Not claimed.
+- **P4–P8 (matching depth, full T&S, retention/virality, monetization, scale).**
+  Domain logic + real-when-keyed adapters are implemented and tested; remaining gaps are the
+  durable-workflow bodies (Inngest), unkeyed live providers, and the P8 infra/IaC above. The
+  entitlement model, trial logic, referral state machine, reputation, notification policy,
+  pricing, retention, monetization, and expansion/scale guards exist as tested domain
+  primitives — later wiring drops in without refactor.
 
 ---
 
