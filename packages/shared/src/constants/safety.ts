@@ -94,3 +94,46 @@ export const SCAM_PATTERNS: readonly RegExp[] = [
   /\bsend (?:me )?money\b|\btransfer\b.*\bmoney\b/i,
   /\bpapara\b|\bhavale\b/i,
 ];
+
+/**
+ * Isolation / off-platform / secrecy language — a grooming + scam early-warning
+ * (RISK_ANALYSIS §PS, §sextortion). Moving off-platform removes accountability.
+ */
+export const ISOLATION_PATTERNS: readonly RegExp[] = [
+  /\b(?:whats ?app|telegram|signal|insta(?:gram)?|snap(?:chat)?)\b/i,
+  /\b(?:dm|text|message) me (?:on|at)\b/i,
+  /\b(?:don'?t|do not) tell\b|\bkeep (?:this|it) (?:secret|between us)\b|\bour secret\b/i,
+  /\b(?:just between|only) you and me\b/i,
+];
+
+/**
+ * Ban-evasion signal weights → re-registration risk score (RISK_ANALYSIS §ban-evasion).
+ * ID-hash match is the strongest single signal; reappearance near a blocker is a
+ * direct PS-10 alert. Weights are blended and clamped to [0,1].
+ */
+export const BAN_EVASION_WEIGHTS: Record<BanEvasionSignal, number> = {
+  id_hash_match: 0.6,
+  phone_hash_match: 0.4,
+  device_id_match: 0.35,
+  payment_fingerprint_match: 0.3,
+  reappearance_near_blocker: 0.45,
+};
+
+/** Ban-evasion decision thresholds on the blended risk score. */
+export const BAN_EVASION_THRESHOLDS = { block: 0.8, review: 0.4 } as const;
+
+/**
+ * Grooming / predatory behaviour thresholds (RISK_ANALYSIS §PS behavioural anomaly).
+ * Fan-out = one account contacting many fresh accounts; age-gap targeting of
+ * newcomers is the highest-signal pattern. Tunable.
+ */
+export const GROOMING = {
+  /** New distinct contacts in 24h above this is a fan-out signal. */
+  fanOutContacts24h: 8,
+  /** Share of recipients who are recently-joined accounts that flags targeting. */
+  newcomerShare: 0.6,
+  /** Median age gap (years) to recipients that flags age-gap targeting. */
+  ageGapYears: 12,
+  /** Risk at/above which a human moderator must review (human-in-loop). */
+  reviewRisk: 0.5,
+} as const;

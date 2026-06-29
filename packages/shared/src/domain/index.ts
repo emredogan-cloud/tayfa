@@ -9,5 +9,6 @@ export * from './entitlements.js';
 export * from './trial.js';
 export * from './referral.js';
 export * from './moderation.js';
+export * from './safety.js';
 export * from './notifications.js';
 export * from './verification.js';
