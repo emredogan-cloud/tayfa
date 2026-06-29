@@ -46,9 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -139,18 +139,18 @@ jobs:
           if [ "$run" != "true" ]; then
             echo "::notice title=EAS::Variant '$variant' is not built on '$event' — skipping."
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.should.outputs.run == 'true'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: steps.should.outputs.run == 'true'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: steps.should.outputs.run == 'true'
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - name: Setup EAS / Expo CLI
         if: steps.should.outputs.run == 'true'
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@v9
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
@@ -171,7 +171,7 @@ jobs:
             --output "build-android-${{ matrix.variant }}.${{ matrix.variant == 'aab' && 'aab' || 'apk' }}"
       - name: Upload Android artifact
         if: steps.should.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-${{ matrix.variant }}
           path: apps/mobile/build-android-${{ matrix.variant }}.*
