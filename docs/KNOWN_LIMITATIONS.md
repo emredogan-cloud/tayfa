@@ -47,7 +47,15 @@ with `TAYFA_PROVIDER_MODE=mock` so the whole spine runs **with zero credentials*
   console, and the landing/OG/KVKK/legal pages are implemented; `next build` succeeds in mock
   mode (21 routes + middleware). Not yet deployed to Vercel and not exercised against a live
   Supabase/Upstash (mock providers stand in).
-- **Production provider adapters.** Only the **mock** adapters are implemented. The real
+- **Provider adapters (Phase 4 update).** The factory is now a **per-provider hybrid**
+  (`apps/web/lib/providers.ts`): each provider uses its REAL adapter when its env key is
+  present, the mock otherwise; `TAYFA_PROVIDER_MODE=mock` forces all-mock (CI/keyless).
+  **REAL and wired:** OpenAI embeddings (`text-embedding-3-small`), generative icebreakers
+  (AI Gateway/Claude Haiku → OpenAI → template), OpenAI text moderation. Their *live* calls
+  are currently gated by the **OpenAI account quota (HTTP 429)** — code is real and ready.
+  **Still mock pending keys:** Persona (ID/liveness), RevenueCat (billing), Hive/Rekognition
+  (image moderation), Expo Push; Inngest function bodies (candidate-gen/re-embed) are designed,
+  not yet implemented. (Historical note below predates Phase 4.) The real
   Persona / RevenueCat / Hive / OpenAI / AI Gateway / Inngest / Upstash / Expo Push / Braze /
   Stripe adapters are interface-complete but not wired — they are drop-in behind the existing
   `Providers` interface (`TAYFA_PROVIDER_MODE`).
