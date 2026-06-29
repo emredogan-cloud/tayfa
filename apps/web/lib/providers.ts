@@ -4,6 +4,7 @@ import {
   type EmbeddingProvider,
   type EntitlementSnapshot,
   type GenerativeProvider,
+  type LifecycleProvider,
   type ModerationProvider,
   type ModerationVerdict,
   type Providers,
@@ -130,6 +131,47 @@ class ExpoPushProvider implements PushProvider {
 }
 
 /**
+ * Braze lifecycle CRM (P6). Real REST calls when keyed — caps are enforced by the
+ * domain (`decideLifecycleSend`) BEFORE we ever enqueue, so this adapter never
+ * jumps a frequency cap. Lifecycle is non-critical: on outage we no-op (a missed
+ * win-back is not a safety risk), never throw into the request path.
+ */
+class BrazeLifecycleProvider implements LifecycleProvider {
+  private async track(body: unknown): Promise<boolean> {
+    const apiKey = env.brazeApiKey();
+    if (!apiKey) return false;
+    try {
+      const res = await fetch(`${env.brazeRestEndpoint()}/users/track`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async enqueue(input: { userId: string; journey: string; payload?: Record<string, unknown> }) {
+    const accepted = await this.track({
+      events: [
+        {
+          external_id: input.userId,
+          name: `journey.${input.journey}`,
+          time: new Date().toISOString(),
+          properties: input.payload ?? {},
+        },
+      ],
+    });
+    return { accepted };
+  }
+
+  async syncAudience(userId: string, attributes: Record<string, unknown>): Promise<void> {
+    await this.track({ attributes: [{ external_id: userId, ...attributes }] });
+  }
+}
+
+/**
  * Per-provider hybrid wiring (mission §"replace mocks" + §AUTONOMY): each provider
  * is its REAL adapter when its env key is present, and the deterministic mock
  * otherwise. So production paths activate the moment a key appears, while keyless
@@ -145,7 +187,8 @@ function buildProviders(): Providers {
   const hasPersona = Boolean(env.personaApiKey());
   const hasRevenueCat = Boolean(env.revenueCatApiKey());
   const hasExpo = Boolean(env.expoAccessToken());
-  const anyReal = hasOpenAi || hasGen || hasPersona || hasRevenueCat || hasExpo;
+  const hasBraze = Boolean(env.brazeApiKey());
+  const anyReal = hasOpenAi || hasGen || hasPersona || hasRevenueCat || hasExpo || hasBraze;
 
   return {
     mode: providerMode() === 'production' || anyReal ? 'production' : 'mock',
@@ -155,6 +198,7 @@ function buildProviders(): Providers {
     embeddings: hasOpenAi ? new OpenAiEmbeddingProvider() : mock.embeddings,
     generative: hasGen ? new GatewayGenerativeProvider() : mock.generative,
     push: hasExpo ? new ExpoPushProvider() : mock.push,
+    lifecycle: hasBraze ? new BrazeLifecycleProvider() : mock.lifecycle,
   };
 }
 

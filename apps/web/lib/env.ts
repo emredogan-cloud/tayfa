@@ -55,6 +55,10 @@ export const env = {
   // Expo push (transactional notifications)
   expoAccessToken: () => read('EXPO_ACCESS_TOKEN'),
 
+  // Braze (lifecycle CRM journeys, P6)
+  brazeApiKey: () => read('BRAZE_API_KEY'),
+  brazeRestEndpoint: () => read('BRAZE_REST_ENDPOINT') ?? 'https://rest.fra-01.braze.eu',
+
   // T&S console access — comma-separated allowlist of moderator user ids.
   moderatorUserIds: (): readonly string[] =>
     (read('TAYFA_MODERATOR_USER_IDS') ?? '')
