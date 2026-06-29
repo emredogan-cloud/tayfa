@@ -32,11 +32,37 @@ const VARIANT: Record<TextVariant, string> = {
   label: 'text-[13px] leading-[16px] font-semibold',
 };
 
+/**
+ * Per-variant font-scaling ceiling. Variants use fixed line-heights, so unbounded
+ * OS font-scaling makes large headings overlap their own next line and clips
+ * fixed-width chrome. We still honour accessibility scaling — generously for body
+ * copy — but cap big display/heading type so layouts never break (a11y audit).
+ */
+const VARIANT_MAX_SCALE: Record<TextVariant, number> = {
+  display: 1.2,
+  title: 1.2,
+  h1: 1.25,
+  h2: 1.3,
+  body: 1.6,
+  bodyStrong: 1.6,
+  callout: 1.5,
+  subhead: 1.5,
+  footnote: 1.5,
+  caption: 1.4,
+  label: 1.4,
+};
+
 export interface TextProps extends RNTextProps {
   variant?: TextVariant;
   className?: string;
 }
 
 export function Text({ variant = 'body', className, ...rest }: TextProps): React.ReactElement {
-  return <RNText className={cn('text-ink', VARIANT[variant], className)} {...rest} />;
+  return (
+    <RNText
+      maxFontSizeMultiplier={VARIANT_MAX_SCALE[variant]}
+      className={cn('text-ink', VARIANT[variant], className)}
+      {...rest}
+    />
+  );
 }
