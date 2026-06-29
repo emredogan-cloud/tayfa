@@ -56,6 +56,8 @@ const config: ExpoConfig = {
         project: process.env.SENTRY_PROJECT ?? 'mobile',
       },
     ],
+    // Persistent Android build fixes (Kotlin 1.9.25 for the Compose compiler).
+    './plugins/with-android-build-fixes',
   ],
   extra: {
     eas: { projectId: process.env.EAS_PROJECT_ID ?? '00000000-0000-0000-0000-000000000000' },

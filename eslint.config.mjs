@@ -15,6 +15,7 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/coverage/**',
       '**/*.config.{js,cjs,mjs,ts}',
+      '**/plugins/**', // Expo config plugins are build-time Node CommonJS
       '**/migrations/**',
       'assets/**',
       'reports/**',
