@@ -12,6 +12,7 @@ export default function Index(): React.ReactElement {
   const hydrated = useSession((s) => s.hydrated);
   const userId = useSession((s) => s.userId);
   const onboardingComplete = useSession((s) => s.onboardingComplete);
+  const hasSeenWelcome = useSession((s) => s.hasSeenWelcome);
 
   if (!hydrated) {
     return (
@@ -29,7 +30,11 @@ export default function Index(): React.ReactElement {
     );
   }
 
-  if (!userId) return <Redirect href="/(auth)/phone" />;
+  // First-time, unauthenticated users see the welcome intro once; afterwards
+  // (hasSeenWelcome persisted) they go straight to phone auth.
+  if (!userId) {
+    return <Redirect href={hasSeenWelcome ? '/(auth)/phone' : '/(onboarding)/welcome'} />;
+  }
   if (!onboardingComplete) return <Redirect href="/(onboarding)/interests" />;
   return <Redirect href="/(tabs)/feed" />;
 }

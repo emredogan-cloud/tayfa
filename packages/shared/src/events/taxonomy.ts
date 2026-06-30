@@ -21,6 +21,7 @@ const userId = z.uuid();
 export const ANALYTICS_EVENT_NAMES = [
   // ── Activation funnel (GROWTH §4) ──
   'signup_started',
+  'welcome_cta_tapped',
   'signup_completed',
   'age_gate_passed',
   'age_gate_failed',
@@ -87,6 +88,7 @@ const noProps = z.object({}).strict();
  */
 export const ANALYTICS_EVENTS = {
   signup_started: noProps,
+  welcome_cta_tapped: z.object({ method: z.enum(['get_started', 'google', 'log_in']) }).strict(),
   signup_completed: z.object({ method: z.enum(['phone', 'apple', 'google']) }).strict(),
   age_gate_passed: z.object({ age: z.number().int().min(18) }).strict(),
   age_gate_failed: z.object({ age: z.number().int().min(0) }).strict(),

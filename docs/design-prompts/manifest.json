@@ -96,5 +96,14 @@
     "size": "1024x1536",
     "outfile": "assets/generated/recap/recap-card-story.png",
     "background": "opaque"
+  },
+  {
+    "id": "onboarding-welcome-illustration",
+    "prompt": "Flat modern vector illustration for a social meetup app onboarding screen, warm and friendly, NOT photographic. Four diverse friends in their twenties standing close together as a group, mid-conversation, smiling warmly and looking at each other: a woman with long dark hair in a coral-orange sweater holding a takeaway coffee cup with a tote bag on her shoulder; a man in a sage-green hoodie with a backpack, hands in pockets; a Black woman with natural curly hair in a mustard-yellow sweater holding a phone; a man in a cream sweater wearing a beige cap with a backpack. Clean flat illustration with soft warm cel shading, simple friendly faces, cohesive line work. Behind the group a soft peach rounded blob shape with a faint pale Istanbul skyline silhouette and a few tiny four-point sparkles. Four small floating circular interest badges with simple line icons arranged around the top: a coffee cup, a bicycle, a music note, and a hiking flag on a mountain. Warm palette of coral #FF5A3C, sage green, mustard yellow, and cream #FFF7F0. Absolutely no text, no letters, no UI chrome. Centered composition, generous padding, transparent background outside the soft peach shape.",
+    "size": "1024x1024",
+    "outfile": "assets/generated/onboarding/welcome-illustration.png",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high"
   }
 ]
