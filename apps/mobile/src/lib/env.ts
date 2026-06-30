@@ -11,6 +11,12 @@ export const ENV = {
   posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '',
   posthogHost: process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
+  /**
+   * Demo/tester builds set EXPO_PUBLIC_ALLOW_MOCK=1 so the canned mock-data
+   * fallback works even in a standalone (release, __DEV__=false) build that has
+   * no backend to reach. Real production builds leave it unset → never mock.
+   */
+  allowMock: process.env.EXPO_PUBLIC_ALLOW_MOCK === '1',
 } as const;
 
 export const isConfigured = {
