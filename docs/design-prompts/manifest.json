@@ -132,5 +132,32 @@
     "format": "png",
     "quality": "high",
     "prompt": "Four happy diverse young-adult friends sitting close together on a coral-orange clay couch in a cozy living room, holding cream coffee mugs and chatting warmly; two small clay chat speech bubbles float above them, one purple with a smiley face and one coral with a white heart; a green clay potted plant on each side and a small round wooden coffee table with a tiny plant in front; a soft arched window with warm light behind them. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, warm orange, cream #FFF7F0, sage green, soft gold."
+  },
+  {
+    "id": "onboarding-interests-mascots",
+    "outfile": "assets/generated/onboarding/interests-mascots.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "Two cute friendly rounded clay blob mascots happily high-fiving, their raised hands meeting at the top center with a tiny clay spark where they touch: the left blob is ember-orange, the right blob is grape-purple, both with simple black dot eyes and warm smiles. Around them four small floating rounded-square clay interest badges, each with one simple white line icon: a coral badge with a music note, a soft-gold badge with a coffee cup, a teal badge with a bicycle, a purple badge with an artist palette. A few small gold four-point sparkles and soft green clay leaves behind. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, grape purple #7A5AF8, teal #0E9F8E, warm gold, cream #FFF7F0, sage green."
+  },
+  {
+    "id": "onboarding-consent-mascot",
+    "outfile": "assets/generated/onboarding/consent-mascot.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "A cute friendly rounded ember-orange clay blob mascot with simple black dot eyes and a warm smile, standing and hugging a large lavender clay shield that has a purple padlock in its center; a grape-purple clay circle badge with a white checkmark floats at the upper right with a few small gold four-point sparkles beside it; soft green clay leaves sprout behind on both sides. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, grape purple #7A5AF8, lavender, cream #FFF7F0, sage green, soft gold."
+  },
+  {
+    "id": "onboarding-profile-card",
+    "outfile": "assets/generated/onboarding/profile-card.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "A friendly upright cream-white clay profile card with rounded corners floating slightly tilted, casting a soft warm shadow: near the top a grape-purple clay circle avatar holding a simple white person silhouette, below it three soft grey rounded placeholder bars suggesting text lines, and along the bottom a row of four small rounded clay interest chips, each with one simple icon (a coral music note, a soft-gold coffee cup, a teal bicycle) plus a small plain chip suggesting more. A small coral clay heart leans against the lower-right corner of the card; soft green clay leaves and a couple of tiny purple accent marks peek out behind. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, grape purple #7A5AF8, teal #0E9F8E, warm gold, cream #FFF7F0, sage green."
   }
 ]
