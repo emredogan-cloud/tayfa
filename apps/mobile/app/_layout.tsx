@@ -11,7 +11,8 @@ import { asId } from '@tayfa/shared/types';
 import { colors } from '@/design-system';
 import { queryClient } from '@/lib/queryClient';
 import { api, setAuthTokenProvider } from '@/lib/api';
-import { getAccessToken, supabase } from '@/lib/supabase';
+import { getAccessToken, supabase, supabaseReady } from '@/lib/supabase';
+import { clearPersistedSession, loadPersistedSession } from '@/lib/sessionStorage';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { initAnalytics, identifyUser } from '@/lib/analytics';
 import { useSession } from '@/stores/session';
@@ -20,6 +21,7 @@ import type { SessionBootstrap } from '@/api/types';
 function RootLayout(): React.ReactElement {
   const hydrate = useSession((s) => s.hydrate);
   const signOut = useSession((s) => s.signOut);
+  const setPhone = useSession((s) => s.setPhone);
 
   useEffect(() => {
     initSentry();
@@ -35,7 +37,31 @@ function RootLayout(): React.ReactElement {
       if (!mounted) return;
 
       if (!user) {
-        hydrate({ userId: null });
+        // No live Supabase session. In a configured (production) build this means
+        // the user is genuinely signed out → drop any stale persisted mirror. In
+        // mock/demo builds (Supabase unconfigured) there is never a live session,
+        // so restore the persisted slice — this is what keeps a completed
+        // onboarding from bouncing the user back to the intro on every cold start.
+        if (supabaseReady) {
+          await clearPersistedSession();
+          if (!mounted) return;
+          hydrate({ userId: null });
+          return;
+        }
+        const persisted = await loadPersistedSession();
+        if (!mounted) return;
+        if (persisted?.userId) {
+          hydrate({
+            userId: persisted.userId,
+            verificationLevel: persisted.verificationLevel,
+            entitlement: persisted.entitlement,
+            onboardingComplete: persisted.onboardingComplete,
+            hasSeenWelcome: persisted.hasSeenWelcome,
+          });
+          if (persisted.phone) setPhone(persisted.phone);
+        } else {
+          hydrate({ userId: null, hasSeenWelcome: persisted?.hasSeenWelcome ?? false });
+        }
         return;
       }
       // Optimistically mark authenticated, then enrich from the BFF (server truth
@@ -58,15 +84,18 @@ function RootLayout(): React.ReactElement {
 
     void bootstrap();
 
+    // Only let real Supabase auth events drive sign-out. In mock/demo mode the
+    // placeholder client emits an initial null-session event that would otherwise
+    // wipe the just-restored persisted session.
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) signOut();
+      if (supabaseReady && !session?.user) signOut();
     });
 
     return () => {
       mounted = false;
       listener.subscription.unsubscribe();
     };
-  }, [hydrate, signOut]);
+  }, [hydrate, signOut, setPhone]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

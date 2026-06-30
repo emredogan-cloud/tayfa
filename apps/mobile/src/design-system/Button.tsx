@@ -43,6 +43,8 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   loading?: boolean;
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
+  /** Trailing icon (e.g. the redesign's CTA arrow), pinned to the far end. */
+  rightIcon?: React.ReactNode;
   className?: string;
 }
 
@@ -53,6 +55,7 @@ export function Button({
   loading = false,
   fullWidth = true,
   leftIcon,
+  rightIcon,
   disabled,
   className,
   ...rest
@@ -64,7 +67,7 @@ export function Button({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       className={cn(
-        'flex-row items-center justify-center gap-2',
+        'relative flex-row items-center justify-center gap-2',
         SIZE[size],
         CONTAINER[variant],
         fullWidth && 'w-full',
@@ -81,6 +84,12 @@ export function Button({
           <Text variant="bodyStrong" className={LABEL[variant]}>
             {label}
           </Text>
+          {/* Trailing icon is pinned to the right edge so the label stays centered. */}
+          {rightIcon ? (
+            <View className="absolute inset-y-0 right-5 items-center justify-center">
+              {rightIcon}
+            </View>
+          ) : null}
         </>
       )}
     </Pressable>
