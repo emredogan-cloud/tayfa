@@ -159,5 +159,14 @@
     "format": "png",
     "quality": "high",
     "prompt": "A friendly upright cream-white clay profile card with rounded corners floating slightly tilted, casting a soft warm shadow: near the top a grape-purple clay circle avatar holding a simple white person silhouette, below it three soft grey rounded placeholder bars suggesting text lines, and along the bottom a row of four small rounded clay interest chips, each with one simple icon (a coral music note, a soft-gold coffee cup, a teal bicycle) plus a small plain chip suggesting more. A small coral clay heart leans against the lower-right corner of the card; soft green clay leaves and a couple of tiny purple accent marks peek out behind. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, grape purple #7A5AF8, teal #0E9F8E, warm gold, cream #FFF7F0, sage green."
+  },
+  {
+    "id": "feed-liquidity-people",
+    "outfile": "assets/generated/feed/liquidity-people.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "Flat modern vector illustration, warm and friendly, NOT photographic. Four diverse friends in their twenties standing close together in a row, chatting animatedly and smiling at each other, each holding a takeaway coffee cup: a woman with long brown hair in a coral-orange sweater, a man with short dark hair in a sage-green hoodie, a woman with long dark hair in a lavender-purple sweater, a man with short brown hair in a blue sweater. Shown from roughly the waist up. Clean flat illustration with soft warm cel shading, simple friendly faces, cohesive line work. Behind them a very faint pale Istanbul skyline silhouette and a few tiny gold four-point sparkles. Warm palette of coral #FF5A3C, sage green, lavender, blue, cream #FFF7F0. Absolutely no text, no letters, no UI chrome. Centered group with a little padding, transparent background."
   }
 ]

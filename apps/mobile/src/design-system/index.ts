@@ -10,5 +10,6 @@ export * from './Screen';
 export * from './TextField';
 export * from './Toggle';
 export * from './LiquidityBanner';
+export * from './PremiumUpsell';
 export * from './SegmentedProgress';
 export * from './TrustRow';
