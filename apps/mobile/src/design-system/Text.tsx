@@ -1,9 +1,23 @@
-import { Text as RNText, type TextProps as RNTextProps } from 'react-native';
+import {
+  PixelRatio,
+  StyleSheet,
+  Text as RNText,
+  type TextProps as RNTextProps,
+  type TextStyle,
+} from 'react-native';
 import { cn } from '@/lib/cn';
 
 /**
  * Typographic scale. One <Text> everywhere keeps the type system cohesive and
  * the screens declarative — pick a role, not a font size.
+ *
+ * ACCESSIBILITY: font size + line height live in a computed style, not fixed
+ * Tailwind classes, so the line box scales WITH the (capped) OS font scale. RN
+ * scales an explicit `fontSize` by the OS setting but never an explicit
+ * `lineHeight`; left fixed, large accessibility scales make headings overlap their
+ * own next line (RC audit D2). Here each variant keeps a constant lineHeight:size
+ * ratio at every scale, and big display/heading type is capped so layouts never
+ * break, while body copy is allowed to grow generously.
  */
 export type TextVariant =
   | 'display'
@@ -18,38 +32,27 @@ export type TextVariant =
   | 'caption'
   | 'label';
 
-const VARIANT: Record<TextVariant, string> = {
-  display: 'text-[34px] leading-[40px] font-extrabold tracking-tight',
-  title: 'text-[27px] leading-[33px] font-bold tracking-tight',
-  h1: 'text-[22px] leading-[28px] font-bold',
-  h2: 'text-[18px] leading-[24px] font-bold',
-  body: 'text-[15px] leading-[22px] font-normal',
-  bodyStrong: 'text-[15px] leading-[22px] font-semibold',
-  callout: 'text-[16px] leading-[22px] font-medium',
-  subhead: 'text-[14px] leading-[20px] font-medium',
-  footnote: 'text-[13px] leading-[18px] font-normal',
-  caption: 'text-[11px] leading-[14px] font-semibold uppercase tracking-[1.2px]',
-  label: 'text-[13px] leading-[16px] font-semibold',
-};
+interface VariantSpec {
+  readonly size: number;
+  readonly line: number;
+  /** Per-variant font-scaling ceiling (headings tight, body generous). */
+  readonly maxScale: number;
+  /** Weight / tracking / transform only — never font size or line height. */
+  readonly cls: string;
+}
 
-/**
- * Per-variant font-scaling ceiling. Variants use fixed line-heights, so unbounded
- * OS font-scaling makes large headings overlap their own next line and clips
- * fixed-width chrome. We still honour accessibility scaling — generously for body
- * copy — but cap big display/heading type so layouts never break (a11y audit).
- */
-const VARIANT_MAX_SCALE: Record<TextVariant, number> = {
-  display: 1.2,
-  title: 1.2,
-  h1: 1.25,
-  h2: 1.3,
-  body: 1.6,
-  bodyStrong: 1.6,
-  callout: 1.5,
-  subhead: 1.5,
-  footnote: 1.5,
-  caption: 1.4,
-  label: 1.4,
+const VARIANT: Record<TextVariant, VariantSpec> = {
+  display: { size: 34, line: 40, maxScale: 1.2, cls: 'font-extrabold tracking-tight' },
+  title: { size: 27, line: 33, maxScale: 1.2, cls: 'font-bold tracking-tight' },
+  h1: { size: 22, line: 28, maxScale: 1.25, cls: 'font-bold' },
+  h2: { size: 18, line: 24, maxScale: 1.3, cls: 'font-bold' },
+  body: { size: 15, line: 22, maxScale: 1.6, cls: 'font-normal' },
+  bodyStrong: { size: 15, line: 22, maxScale: 1.6, cls: 'font-semibold' },
+  callout: { size: 16, line: 22, maxScale: 1.5, cls: 'font-medium' },
+  subhead: { size: 14, line: 20, maxScale: 1.5, cls: 'font-medium' },
+  footnote: { size: 13, line: 18, maxScale: 1.5, cls: 'font-normal' },
+  caption: { size: 11, line: 14, maxScale: 1.4, cls: 'font-semibold uppercase tracking-[1.2px]' },
+  label: { size: 13, line: 16, maxScale: 1.4, cls: 'font-semibold' },
 };
 
 export interface TextProps extends RNTextProps {
@@ -57,11 +60,26 @@ export interface TextProps extends RNTextProps {
   className?: string;
 }
 
-export function Text({ variant = 'body', className, ...rest }: TextProps): React.ReactElement {
+export function Text({
+  variant = 'body',
+  className,
+  style,
+  ...rest
+}: TextProps): React.ReactElement {
+  const v = VARIANT[variant];
+  // Apply the OS font scale (capped per variant) to BOTH size and line height so the
+  // ratio is fixed at every scale — deterministic, independent of RN's internal
+  // line-height handling. `allowFontScaling={false}` stops RN double-scaling.
+  const scale = Math.min(PixelRatio.getFontScale(), v.maxScale);
+  const computed: TextStyle = {
+    fontSize: Math.round(v.size * scale),
+    lineHeight: Math.round(v.line * scale),
+  };
   return (
     <RNText
-      maxFontSizeMultiplier={VARIANT_MAX_SCALE[variant]}
-      className={cn('text-ink', VARIANT[variant], className)}
+      allowFontScaling={false}
+      style={StyleSheet.flatten([computed, style])}
+      className={cn('text-ink', v.cls, className)}
       {...rest}
     />
   );

@@ -21,6 +21,9 @@ export default function TabsLayout(): React.ReactElement {
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        // Tab labels live in a fixed-width column; don't let large OS font scales
+        // truncate them ("Disc…") — the icon + short label stay legible (a11y D2).
+        tabBarAllowFontScaling: false,
       }}
     >
       <Tabs.Screen
