@@ -105,5 +105,32 @@
     "background": "transparent",
     "format": "png",
     "quality": "high"
+  },
+  {
+    "id": "auth-phone-mascot",
+    "outfile": "assets/generated/auth/phone-mascot.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "A cute friendly rounded ember-orange blob mascot character with simple black dot eyes and a small smile, sitting and holding a small smartphone in its little arms; next to it a taller upright smartphone showing a coral clay shield with a white checkmark inside a speech bubble and a row of OTP dots; a small clay padlock resting beside them; a few green clay leaves sprouting behind. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, warm orange, cream #FFF7F0, sage green, soft gold."
+  },
+  {
+    "id": "auth-otp-envelope",
+    "outfile": "assets/generated/auth/otp-envelope.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "An open orange clay envelope with a white card emerging from it; on the card a coral clay shield with a white checkmark; small gold four-point sparkles floating around the top; soft green clay leaves fanning out behind the envelope. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, warm orange, cream #FFF7F0, sage green, soft gold."
+  },
+  {
+    "id": "auth-agegate-friends",
+    "outfile": "assets/generated/auth/agegate-friends.png",
+    "size": "1024x1024",
+    "background": "transparent",
+    "format": "png",
+    "quality": "high",
+    "prompt": "Four happy diverse young-adult friends sitting close together on a coral-orange clay couch in a cozy living room, holding cream coffee mugs and chatting warmly; two small clay chat speech bubbles float above them, one purple with a smiley face and one coral with a white heart; a green clay potted plant on each side and a small round wooden coffee table with a tiny plant in front; a soft arched window with warm light behind them. 3D claymorphism illustration, soft matte clay render, warm soft studio lighting, soft long shadows, rounded friendly forms, transparent background, absolutely no text or letters, centered with padding. Palette: coral #FF5A3C, warm orange, cream #FFF7F0, sage green, soft gold."
   }
 ]

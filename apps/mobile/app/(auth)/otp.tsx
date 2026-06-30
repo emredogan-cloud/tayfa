@@ -1,17 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { otpVerifySchema } from '@tayfa/shared/schemas';
 import { asId } from '@tayfa/shared/types';
-import { Button, Screen, Text, TextField } from '@/design-system';
+import { Button, Card, colors, Screen, Text } from '@/design-system';
+import { AuthHeader } from '@/components/AuthHeader';
+import { OtpInput } from '@/components/OtpInput';
+import { illustrations } from '@/lib/illustrations';
 import { supabase, supabaseReady } from '@/lib/supabase';
 import { useSession } from '@/stores/session';
 
 /**
- * Step 2 — verify the SMS code. On success Supabase mints a session; we hydrate
- * the store with the user id so the route gate treats us as authenticated, then
- * move to the hard 18+ age gate.
+ * Step 2 — verify the SMS code (redesign `02-auth-otp`). On success Supabase
+ * mints a session; we hydrate the store with the user id so the route gate treats
+ * us as authenticated, then move to the hard 18+ age gate.
  */
+const CODE_TTL_SECONDS = 300;
+
+function formatPhone(p: string | null): string {
+  const m = p?.match(/^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/);
+  return m ? `+90 ${m[1]} ${m[2]} ${m[3]} ${m[4]}` : (p ?? 'your phone');
+}
+
 export default function OtpScreen(): React.ReactElement {
   const router = useRouter();
   const phone = useSession((s) => s.phone);
@@ -21,6 +33,14 @@ export default function OtpScreen(): React.ReactElement {
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [secs, setSecs] = useState(CODE_TTL_SECONDS);
+
+  useEffect(() => {
+    const id = setInterval(() => setSecs((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const mmss = `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
 
   async function onVerify(): Promise<void> {
     setError(null);
@@ -61,49 +81,109 @@ export default function OtpScreen(): React.ReactElement {
   }
 
   async function onResend(): Promise<void> {
-    if (!phone || !supabaseReady) return;
     setError(null);
-    await supabase.auth.signInWithOtp({ phone });
+    setSecs(CODE_TTL_SECONDS);
+    if (phone && supabaseReady) await supabase.auth.signInWithOtp({ phone });
   }
 
   return (
-    <Screen>
-      <View className="flex-1 justify-between py-6">
-        <View className="gap-8 pt-8">
-          <View className="gap-3">
-            <Text variant="display">Enter the code</Text>
-            <Text variant="callout" className="text-ink-muted">
-              Sent to {phone ?? 'your phone'}. It expires in a few minutes.
+    <Screen scroll>
+      <AuthHeader pill={{ icon: 'shield-checkmark-outline', label: 'Secure verification' }} />
+
+      <View className="mt-6 flex-row items-start justify-between gap-3">
+        <View className="flex-1">
+          <Text
+            style={{ fontSize: 36, lineHeight: 42 }}
+            className="font-extrabold tracking-tight text-ink"
+          >
+            Enter the code
+          </Text>
+          <Text variant="callout" className="mt-3 text-ink-muted">
+            We sent a 6-digit code to{' '}
+            <Text variant="callout" className="font-bold text-ember">
+              {formatPhone(phone)}
+            </Text>
+            . It expires in a few minutes.
+          </Text>
+        </View>
+        <Image
+          source={illustrations.authOtp}
+          style={{ width: 110, height: 110 }}
+          contentFit="contain"
+          transition={200}
+          accessibilityLabel=""
+        />
+      </View>
+
+      {/* Info card */}
+      <Card className="mt-6 flex-row items-stretch p-3">
+        <View className="flex-1 flex-row items-center gap-2.5 px-1">
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-ember-soft">
+            <Ionicons name="time-outline" size={18} color={colors.ember} />
+          </View>
+          <View>
+            <Text variant="footnote" className="text-ink-muted">
+              Code expires in
+            </Text>
+            <Text variant="bodyStrong" className="text-ember">
+              {mmss}
             </Text>
           </View>
-
-          <TextField
-            label="6-digit code"
-            value={token}
-            onChangeText={(t) => setToken(t.replace(/\D/g, '').slice(0, 6))}
-            error={error}
-            keyboardType="number-pad"
-            autoComplete="sms-otp"
-            textContentType="oneTimeCode"
-            placeholder="123456"
-            autoFocus
-            maxLength={6}
-            onSubmitEditing={() => void onVerify()}
-          />
-
-          <Pressable onPress={() => void onResend()} className="self-start active:opacity-70">
-            <Text variant="subhead" className="text-ember">
-              Didn't get it? Resend code
-            </Text>
-          </Pressable>
         </View>
+        <View className="w-px self-stretch bg-line" />
+        <View className="flex-1 flex-row items-center gap-2.5 px-1 pl-3">
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-ember-soft">
+            <Ionicons name="lock-closed" size={17} color={colors.ember} />
+          </View>
+          <Text variant="footnote" className="flex-1 font-semibold text-ink">
+            Your security is our priority
+          </Text>
+        </View>
+      </Card>
 
-        <Button
-          label="Verify"
-          loading={loading}
-          disabled={token.length !== 6}
-          onPress={() => void onVerify()}
-        />
+      {/* Code input */}
+      <Text variant="label" className="mb-3 mt-7 text-ink">
+        6-digit code
+      </Text>
+      <OtpInput value={token} onChange={setToken} onComplete={() => void onVerify()} autoFocus />
+      {error ? (
+        <Text variant="footnote" className="mt-2 text-danger">
+          {error}
+        </Text>
+      ) : null}
+
+      {/* Resend */}
+      <Pressable
+        onPress={() => void onResend()}
+        className="mt-4 flex-row items-center rounded-2xl border border-line bg-surface p-3 active:opacity-80"
+      >
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-ember-soft">
+          <Ionicons name="paper-plane-outline" size={18} color={colors.ember} />
+        </View>
+        <View className="ml-3 flex-1">
+          <Text variant="footnote" className="text-ink-muted">
+            Didn&apos;t get it?
+          </Text>
+          <Text variant="bodyStrong" className="text-ember">
+            Resend code
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.inkSubtle} />
+      </Pressable>
+
+      <Button
+        label="Verify"
+        className="mt-8"
+        loading={loading}
+        disabled={token.length !== 6}
+        onPress={() => void onVerify()}
+        rightIcon={<Ionicons name="arrow-forward" size={20} color={colors.inkInverse} />}
+      />
+      <View className="mt-4 flex-row items-center justify-center gap-1.5">
+        <Ionicons name="lock-closed" size={14} color={colors.verified} />
+        <Text variant="footnote" className="text-ink-subtle">
+          Your code is private and secure.
+        </Text>
       </View>
     </Screen>
   );

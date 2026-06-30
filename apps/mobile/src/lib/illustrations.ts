@@ -6,10 +6,19 @@
  * the asset module typing.
  */
 import welcomePeople from '../../assets/illustrations/welcome-people.png';
+import authPhone from '../../assets/illustrations/auth-phone.png';
+import authOtp from '../../assets/illustrations/auth-otp.png';
+import authAgegate from '../../assets/illustrations/auth-agegate.png';
 
 export const illustrations = {
   /** First-run welcome hero — four friends + floating interest badges. */
   welcomePeople,
+  /** Phone-entry clay mascot — blob + phone + shield + padlock. */
+  authPhone,
+  /** OTP clay illustration — envelope + shield checkmark. */
+  authOtp,
+  /** Age-gate clay scene — friends on a couch with chat bubbles. */
+  authAgegate,
 } as const;
 
 export type IllustrationKey = keyof typeof illustrations;
