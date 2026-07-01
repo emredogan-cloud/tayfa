@@ -105,6 +105,9 @@ export default function PaywallScreen(): React.ReactElement {
   }
 
   const annualDiscountPct = Math.round(plan.annualDiscount * 100);
+  // Honest, config-derived "months free" — never a marketing number that doesn't
+  // reconcile with the actual annual vs. monthly price.
+  const monthsFree = Math.round((plan.monthly * 12 - plan.annual) / plan.monthly);
 
   return (
     <Screen padded={false}>
@@ -132,12 +135,19 @@ export default function PaywallScreen(): React.ReactElement {
         </View>
 
         {/* Reassurance — safety/core never paywalled */}
-        <Card className="flex-row items-center gap-3 border-verified-soft bg-verified-soft">
-          <Ionicons name="lock-open" size={20} color={colors.verified} />
-          <Text variant="footnote" className="flex-1 text-ink">
-            Discovering, joining, hosting, chat, verification, and the entire Safety Center are
-            always free. Tayfa+ never gates them.
-          </Text>
+        <Card className="flex-row items-start gap-3 border-verified-soft bg-verified-soft">
+          <View className="h-11 w-11 items-center justify-center rounded-2xl bg-verified">
+            <Ionicons name="lock-closed" size={20} color={colors.inkInverse} />
+          </View>
+          <View className="flex-1">
+            <Text variant="bodyStrong" className="text-verified">
+              Always free, always safe
+            </Text>
+            <Text variant="footnote" className="mt-0.5 text-ink">
+              Discovering, joining, hosting, chat, verification, and the entire Safety Center are
+              always free. Tayfa+ never gates them.
+            </Text>
+          </View>
         </Card>
 
         {/* Plan toggle */}
@@ -145,19 +155,37 @@ export default function PaywallScreen(): React.ReactElement {
           <PlanCard
             title="Annual"
             price={money(plan.currency, plan.annual)}
+            priceSuffix="/yr"
             sub={`${money(plan.currency, plan.annualPerMonth)}/mo · save ${annualDiscountPct}%`}
             active={cycle === 'annual'}
-            badge={`Best value`}
+            badge="Best value"
+            ribbon="Most popular"
+            giftLabel={monthsFree >= 1 ? `${monthsFree} months free` : undefined}
             onPress={() => setCycle('annual')}
           />
           <PlanCard
             title="Monthly"
             price={money(plan.currency, plan.monthly)}
+            priceSuffix="/mo"
             sub="per month"
             active={cycle === 'monthly'}
             onPress={() => setCycle('monthly')}
           />
         </View>
+
+        {/* Happiness guarantee */}
+        <Card className="flex-row items-center gap-3">
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-grape-soft">
+            <Ionicons name="shield-checkmark" size={18} color={colors.grape} />
+          </View>
+          <View className="flex-1">
+            <Text variant="bodyStrong">7-day happiness guarantee</Text>
+            <Text variant="footnote" className="text-ink-muted">
+              Not feeling it? Cancel within 7 days for a full refund.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.inkSubtle} />
+        </Card>
 
         {/* Feature list */}
         <View className="gap-1">
@@ -184,7 +212,7 @@ export default function PaywallScreen(): React.ReactElement {
                     {copy.desc}
                   </Text>
                 </View>
-                {isHi ? <Ionicons name="arrow-back" size={16} color={colors.grape} /> : null}
+                <Ionicons name="chevron-forward" size={16} color={colors.inkSubtle} />
               </View>
             );
           })}
@@ -193,13 +221,17 @@ export default function PaywallScreen(): React.ReactElement {
 
       <View className="absolute inset-x-0 bottom-0 gap-2 border-t border-line bg-canvas px-5 pb-8 pt-4">
         <Button
-          label={`Continue — ${cycle === 'annual' ? money(plan.currency, plan.annual) + '/yr' : money(plan.currency, plan.monthly) + '/mo'}`}
+          label={`Continue — ${cycle === 'annual' ? money(plan.currency, plan.annual) + '/year' : money(plan.currency, plan.monthly) + '/month'}`}
           variant="premium"
+          leftIcon={<Ionicons name="sparkles" size={18} color={colors.inkInverse} />}
           onPress={choose}
         />
-        <Text variant="footnote" className="text-center text-ink-subtle">
-          Cancel anytime. Billed via the App Store / Google Play.
-        </Text>
+        <View className="flex-row items-center justify-center gap-1">
+          <Ionicons name="lock-closed" size={12} color={colors.inkSubtle} />
+          <Text variant="footnote" className="text-center text-ink-subtle">
+            Cancel anytime. Billed via the App Store / Google Play.
+          </Text>
+        </View>
       </View>
     </Screen>
   );
@@ -208,16 +240,22 @@ export default function PaywallScreen(): React.ReactElement {
 function PlanCard({
   title,
   price,
+  priceSuffix,
   sub,
   active,
   badge,
+  ribbon,
+  giftLabel,
   onPress,
 }: {
   title: string;
   price: string;
+  priceSuffix: string;
   sub: string;
   active: boolean;
   badge?: string;
+  ribbon?: string;
+  giftLabel?: string;
   onPress: () => void;
 }): React.ReactElement {
   return (
@@ -228,16 +266,36 @@ function PlanCard({
           active ? 'border-grape bg-grape-soft' : 'border-line bg-surface',
         )}
       >
+        {ribbon ? (
+          <View className="mb-1 self-start rounded-full bg-grape px-2.5 py-1">
+            <Text variant="caption" className="text-ink-inverse">
+              {ribbon}
+            </Text>
+          </View>
+        ) : null}
         <View className="flex-row items-center justify-between">
           <Text variant="bodyStrong" className={active ? 'text-grape' : 'text-ink'}>
             {title}
           </Text>
           {badge ? <Badge label={badge} tone="grape" /> : null}
         </View>
-        <Text variant="h1">{price}</Text>
-        <Text variant="footnote" className="text-ink-muted">
+        <View className="flex-row items-baseline gap-1">
+          <Text variant="title">{price}</Text>
+          <Text variant="footnote" className="text-ink-muted">
+            {priceSuffix}
+          </Text>
+        </View>
+        <Text variant="footnote" className={active ? 'text-grape' : 'text-ink-muted'}>
           {sub}
         </Text>
+        {giftLabel ? (
+          <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-surface px-2.5 py-1">
+            <Ionicons name="gift" size={12} color={colors.grape} />
+            <Text variant="caption" className="text-grape">
+              {giftLabel}
+            </Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );

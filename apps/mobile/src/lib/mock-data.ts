@@ -13,7 +13,10 @@ import type {
   CreatedEvent,
   EventDetail,
   FeedResponse,
+  HostStandingResponse,
+  MarketplaceResponse,
   MyProfileResponse,
+  NotificationsResponse,
   RsvpResult,
   SessionBootstrap,
 } from '@/api/types';
@@ -333,6 +336,129 @@ const CREWS: Crew[] = [
   },
 ];
 
+const NOTIFICATIONS: NotificationsResponse = {
+  notifications: [
+    {
+      id: uid(700),
+      type: 'rsvp_approved',
+      category: 'your_plans',
+      title: 'You’re in! Bouldering @ BoulderPlus',
+      body: 'Burak approved your request. The exact spot unlocks near start time.',
+      createdAt: hoursFromNow(-1),
+      readAt: null,
+      eventId: uid(202),
+    },
+    {
+      id: uid(701),
+      type: 'chat_message',
+      category: 'social',
+      title: 'New message in Board Game Night',
+      body: 'Ece: “First time joining — what should I bring?”',
+      createdAt: hoursFromNow(-2),
+      readAt: null,
+      eventId: uid(203),
+    },
+    {
+      id: uid(702),
+      type: 'event_reminder',
+      category: 'your_plans',
+      title: 'Starts soon: Sunday Coastal Ride',
+      body: 'Your ride with Nilay starts in 3 hours. Don’t leave them hanging!',
+      createdAt: hoursFromNow(-4),
+      readAt: hoursFromNow(-3),
+      eventId: uid(201),
+    },
+    {
+      id: uid(703),
+      type: 'discovery_match',
+      category: 'discovery',
+      title: '3 new meetups match your taste',
+      body: 'Fresh Specialty Coffee & Cycling hangouts opened up near Kadıköy.',
+      createdAt: hoursFromNow(-26),
+      readAt: hoursFromNow(-25),
+      eventId: null,
+    },
+    {
+      id: uid(704),
+      type: 'welcome',
+      category: 'lifecycle',
+      title: 'Welcome to Tayfa 👋',
+      body: 'You’re verified and ready. Join your first meetup or host one of your own.',
+      createdAt: hoursFromNow(-200),
+      readAt: hoursFromNow(-199),
+      eventId: null,
+    },
+  ],
+  unreadCount: 2,
+};
+
+// Demo host standing: phone-verified with a couple of hosted meetups — pro-tools
+// are within reach but payouts stay blocked (KYC + ID), so the panel honestly
+// shows the path rather than pretending money can move.
+const HOST_STANDING: HostStandingResponse = {
+  reliabilityScore: 0.72,
+  completedHostedEvents: 2,
+  verificationLevel: 'phone',
+  kycComplete: false,
+  currency: 'TRY',
+  lifetimeNetMinor: 0,
+  pendingPayoutMinor: 0,
+  ticketsSold: 0,
+};
+
+const MARKETPLACE: MarketplaceResponse = {
+  listings: [
+    {
+      id: uid(500),
+      title: 'Natural Wine Tasting',
+      kind: 'venue',
+      sponsored: true,
+      sponsorName: 'Vino Kadıköy',
+      hostName: 'Vino Kadıköy',
+      venueName: 'Vino Kadıköy',
+      neighborhood: 'Kadıköy',
+      startsAt: hoursFromNow(52),
+      category: 'Natural Wine',
+      priceMinor: 15_000,
+      currency: 'TRY',
+      capacityMax: 12,
+      sold: 8,
+    },
+    {
+      id: uid(501),
+      title: 'Rooftop Vinyl Night',
+      kind: 'featured',
+      sponsored: false,
+      sponsorName: null,
+      hostName: 'Deniz Y.',
+      venueName: 'Karaköy Rooftop',
+      neighborhood: 'Karaköy',
+      startsAt: hoursFromNow(28),
+      category: 'Indie',
+      priceMinor: 8_000,
+      currency: 'TRY',
+      capacityMax: 30,
+      sold: 21,
+    },
+    {
+      id: uid(502),
+      title: 'Hands-on Pottery Workshop',
+      kind: 'ticketed',
+      sponsored: false,
+      sponsorName: null,
+      hostName: 'Ece K.',
+      venueName: 'Moda Studio',
+      neighborhood: 'Moda',
+      startsAt: hoursFromNow(76),
+      category: 'Pottery',
+      priceMinor: 25_000,
+      currency: 'TRY',
+      capacityMax: 6,
+      sold: 6,
+    },
+  ],
+};
+
 const SESSION: SessionBootstrap = {
   userId: ME as SessionBootstrap['userId'],
   verificationLevel: 'phone',
@@ -352,6 +478,10 @@ export function getMockResponse(method: string, path: string): unknown | undefin
   if (method === 'GET' && p === '/me/session') return SESSION;
   if (method === 'GET' && p === '/me/profile') return MY_PROFILE;
   if (method === 'GET' && p === '/me/crews') return CREWS;
+  if (method === 'GET' && p === '/me/notifications') return NOTIFICATIONS;
+  if (method === 'POST' && p === '/me/notifications/read') return { ok: true };
+  if (method === 'GET' && p === '/me/host/standing') return HOST_STANDING;
+  if (method === 'GET' && p === '/marketplace') return MARKETPLACE;
 
   const chatMatch = p.match(/^\/events\/([^/]+)\/chat$/);
   if (chatMatch) return chatThread(chatMatch[1]!);

@@ -61,3 +61,6 @@ Thumbs.db
 # ── Supabase local ──
 supabase/.branches/
 supabase/.temp/
+
+# ── Local working files (private mission prompts) ──
+tayfa_mission.md

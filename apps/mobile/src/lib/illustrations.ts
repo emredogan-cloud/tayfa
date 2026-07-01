@@ -9,6 +9,11 @@ import welcomePeople from '../../assets/illustrations/welcome-people.png';
 import authPhone from '../../assets/illustrations/auth-phone.png';
 import authOtp from '../../assets/illustrations/auth-otp.png';
 import authAgegate from '../../assets/illustrations/auth-agegate.png';
+import onboardingInterests from '../../assets/illustrations/onboarding-interests.png';
+import onboardingConsent from '../../assets/illustrations/onboarding-consent.png';
+import onboardingProfile from '../../assets/illustrations/onboarding-profile.png';
+import liquidityPeople from '../../assets/feed/liquidity-people.png';
+import eventsEmpty from '../../assets/events/empty-state.png';
 
 export const illustrations = {
   /** First-run welcome hero — four friends + floating interest badges. */
@@ -19,6 +24,16 @@ export const illustrations = {
   authOtp,
   /** Age-gate clay scene — friends on a couch with chat bubbles. */
   authAgegate,
+  /** Interests picker — two clay blobs high-fiving + floating interest badges. */
+  onboardingInterests,
+  /** Consent — ember blob hugging a padlock shield + grape checkmark badge. */
+  onboardingConsent,
+  /** Profile setup — clay profile card with avatar, interest chips + heart. */
+  onboardingProfile,
+  /** Liquidity banner — four friends chatting over coffee (transparent). */
+  liquidityPeople,
+  /** Empty feed — friendly crew around a spark, nudging you to host. */
+  eventsEmpty,
 } as const;
 
 export type IllustrationKey = keyof typeof illustrations;

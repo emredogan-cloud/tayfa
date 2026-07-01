@@ -53,3 +53,14 @@ export function formatGoing(capacity: Capacity): string {
   if (capacity.going === 0) return `${capacity.max} spots`;
   return `${capacity.going} going · ${remaining} ${remaining === 1 ? 'spot' : 'spots'} left`;
 }
+
+/**
+ * Money is always integer MINOR units (kuruş / cents). Render without floating
+ * point drift: whole amounts show no decimals, part-amounts show two.
+ */
+export function formatMinor(minor: number, currency: 'TRY' | 'EUR' = 'TRY'): string {
+  const symbol = currency === 'EUR' ? '€' : '₺';
+  const whole = Math.trunc(minor / 100);
+  const cents = Math.abs(minor % 100);
+  return cents === 0 ? `${symbol}${whole}` : `${symbol}${whole}.${pad2(cents)}`;
+}
