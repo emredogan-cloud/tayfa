@@ -14,6 +14,7 @@ import type {
   EventDetail,
   FeedResponse,
   MyProfileResponse,
+  NotificationsResponse,
   RsvpResult,
   SessionBootstrap,
 } from '@/api/types';
@@ -333,6 +334,62 @@ const CREWS: Crew[] = [
   },
 ];
 
+const NOTIFICATIONS: NotificationsResponse = {
+  notifications: [
+    {
+      id: uid(700),
+      type: 'rsvp_approved',
+      category: 'your_plans',
+      title: 'You’re in! Bouldering @ BoulderPlus',
+      body: 'Burak approved your request. The exact spot unlocks near start time.',
+      createdAt: hoursFromNow(-1),
+      readAt: null,
+      eventId: uid(202),
+    },
+    {
+      id: uid(701),
+      type: 'chat_message',
+      category: 'social',
+      title: 'New message in Board Game Night',
+      body: 'Ece: “First time joining — what should I bring?”',
+      createdAt: hoursFromNow(-2),
+      readAt: null,
+      eventId: uid(203),
+    },
+    {
+      id: uid(702),
+      type: 'event_reminder',
+      category: 'your_plans',
+      title: 'Starts soon: Sunday Coastal Ride',
+      body: 'Your ride with Nilay starts in 3 hours. Don’t leave them hanging!',
+      createdAt: hoursFromNow(-4),
+      readAt: hoursFromNow(-3),
+      eventId: uid(201),
+    },
+    {
+      id: uid(703),
+      type: 'discovery_match',
+      category: 'discovery',
+      title: '3 new meetups match your taste',
+      body: 'Fresh Specialty Coffee & Cycling hangouts opened up near Kadıköy.',
+      createdAt: hoursFromNow(-26),
+      readAt: hoursFromNow(-25),
+      eventId: null,
+    },
+    {
+      id: uid(704),
+      type: 'welcome',
+      category: 'lifecycle',
+      title: 'Welcome to Tayfa 👋',
+      body: 'You’re verified and ready. Join your first meetup or host one of your own.',
+      createdAt: hoursFromNow(-200),
+      readAt: hoursFromNow(-199),
+      eventId: null,
+    },
+  ],
+  unreadCount: 2,
+};
+
 const SESSION: SessionBootstrap = {
   userId: ME as SessionBootstrap['userId'],
   verificationLevel: 'phone',
@@ -352,6 +409,8 @@ export function getMockResponse(method: string, path: string): unknown | undefin
   if (method === 'GET' && p === '/me/session') return SESSION;
   if (method === 'GET' && p === '/me/profile') return MY_PROFILE;
   if (method === 'GET' && p === '/me/crews') return CREWS;
+  if (method === 'GET' && p === '/me/notifications') return NOTIFICATIONS;
+  if (method === 'POST' && p === '/me/notifications/read') return { ok: true };
 
   const chatMatch = p.match(/^\/events\/([^/]+)\/chat$/);
   if (chatMatch) return chatThread(chatMatch[1]!);

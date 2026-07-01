@@ -12,6 +12,7 @@ import type {
   UserInterest,
   VerificationLevel,
 } from '@tayfa/shared/types';
+import type { NotificationCategory } from '@tayfa/shared/constants';
 
 /**
  * BFF response contracts as consumed by the mobile client. These mirror the
@@ -78,6 +79,28 @@ export interface MyProfileResponse {
 
 export interface PublicProfileResponse {
   readonly profile: PublicProfile;
+}
+
+/**
+ * A single Notification Center row. Mirrors the `notification` ledger
+ * (type + category + payload + sent/opened) with the payload flattened to the
+ * fields the UI renders. `readAt` maps to the ledger's `openedAt`.
+ */
+export interface NotificationItem {
+  readonly id: string;
+  readonly type: string;
+  readonly category: NotificationCategory;
+  readonly title: string;
+  readonly body: string;
+  readonly createdAt: string;
+  readonly readAt: string | null;
+  /** Optional deep-link target extracted from the payload. */
+  readonly eventId?: string | null;
+}
+
+export interface NotificationsResponse {
+  readonly notifications: readonly NotificationItem[];
+  readonly unreadCount: number;
 }
 
 /** A selectable interest in the onboarding taste-card catalog. */

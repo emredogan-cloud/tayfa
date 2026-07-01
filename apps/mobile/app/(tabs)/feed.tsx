@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import type { FeedQuery } from '@tayfa/shared/schemas';
 import type { FeedEvent } from '@tayfa/shared/types';
 import { DISCOVERY } from '@tayfa/shared/constants';
-import { useFeed } from '@/api';
+import { useFeed, useNotifications } from '@/api';
 import {
   Button,
   Card,
@@ -112,6 +112,7 @@ export default function FeedScreen(): React.ReactElement {
   const feed = useFeed(query);
   const events = feed.data?.events ?? [];
   const isFree = entitlement === 'free';
+  const unread = useNotifications().data?.unreadCount ?? 0;
 
   useEffect(() => {
     if (feed.data && !seenFirstView.current) {
@@ -141,7 +142,24 @@ export default function FeedScreen(): React.ReactElement {
             </Text>
           </View>
         </View>
-        <View className="flex-row gap-3">
+        <View className="flex-row gap-2">
+          <Pressable
+            onPress={() => router.push('/notifications')}
+            accessibilityLabel="Notifications"
+            className="items-center active:opacity-80"
+          >
+            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-amber-soft">
+              <Ionicons name="notifications" size={22} color={colors.amber} />
+              {unread > 0 ? (
+                <View className="absolute -right-1 -top-1 h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ember px-1">
+                  <Text className="text-[10px] font-bold text-white">
+                    {unread > 9 ? '9+' : unread}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <Text className="mt-1 text-[11px] font-semibold text-ink-muted">Alerts</Text>
+          </Pressable>
           <Pressable
             onPress={() => router.push('/safety-center')}
             accessibilityLabel="Safety Center"
