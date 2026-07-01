@@ -15,7 +15,10 @@ import {
   Card,
   Chip,
   colors,
+  ConfirmDialog,
   PremiumUpsell,
+  ReportReasonDialog,
+  SafetyActionsSheet,
   Screen,
   Text,
   VerifiedBadge,
@@ -44,13 +47,6 @@ const MEMBER_STATUS: Record<
   left: { label: 'Left', tone: 'neutral' },
   no_show: { label: 'No show', tone: 'neutral' },
 };
-
-const REPORT_REASONS: ReadonlyArray<{ key: ReportInput['reason']; label: string }> = [
-  { key: 'harassment', label: 'Harassment' },
-  { key: 'scam', label: 'Scam or money request' },
-  { key: 'imminent_harm', label: 'Safety threat' },
-  { key: 'spam', label: 'Spam' },
-];
 
 /** Tiny reliability strength indicator (4 bars, filled by score). */
 function ReliabilityBars({ score }: { score: number }): React.ReactElement {
@@ -88,6 +84,10 @@ export default function EventDetailScreen(): React.ReactElement {
   const block = useBlock();
   const entitlement = useSession((s) => s.entitlement);
   const [saved, setSaved] = useState(false);
+  const [safetyOpen, setSafetyOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<'event' | 'user' | null>(null);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   useEffect(() => {
     if (eventId) track('event_viewed', { event_id: eventId });
@@ -109,47 +109,21 @@ export default function EventDetailScreen(): React.ReactElement {
   const isFree = entitlement === 'free';
   const badge = viewerRsvpStatus ? RSVP_BADGE[viewerRsvpStatus] : undefined;
 
-  function reportEvent(): void {
-    Alert.alert('Report this meetup', 'Why are you reporting it?', [
-      ...REPORT_REASONS.map((r) => ({
-        text: r.label,
-        onPress: () =>
-          report.mutate(
-            { targetType: 'event', targetId: eventId, reason: r.key },
-            { onSuccess: () => Alert.alert('Thanks', 'Our safety team will review this fast.') },
-          ),
-      })),
-      { text: 'Cancel', style: 'cancel' as const },
-    ]);
-  }
-
-  function blockHost(): void {
-    Alert.alert('Block host', `You won't see ${event.host.displayName} or their events again.`, [
-      { text: 'Cancel', style: 'cancel' },
+  function submitReport(reason: ReportInput['reason']): void {
+    const isUser = reportTarget === 'user';
+    report.mutate(
       {
-        text: 'Block',
-        style: 'destructive',
-        onPress: () =>
-          block.mutate({ blockedUserId: event.host.userId }, { onSuccess: () => router.back() }),
+        targetType: isUser ? 'user' : 'event',
+        targetId: isUser ? event.host.userId : eventId,
+        reason,
       },
-    ]);
-  }
-
-  function openOverflow(): void {
-    Alert.alert('Options', undefined, [
-      { text: 'Report meetup', onPress: reportEvent },
-      { text: 'Block host', style: 'destructive', onPress: blockHost },
-      ...(isMember
-        ? [
-            {
-              text: 'Leave meetup',
-              style: 'destructive' as const,
-              onPress: () => rsvp.leave.mutate(),
-            },
-          ]
-        : []),
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+      {
+        onSuccess: () => {
+          setReportTarget(null);
+          setReportDone(true);
+        },
+      },
+    );
   }
 
   function shareEvent(): void {
@@ -180,9 +154,9 @@ export default function EventDetailScreen(): React.ReactElement {
             <Ionicons name="share-social-outline" size={19} color={colors.ink} />
           </Pressable>
           <Pressable
-            onPress={openOverflow}
+            onPress={() => setSafetyOpen(true)}
             hitSlop={8}
-            accessibilityLabel="More options"
+            accessibilityLabel="Safety and more options"
             className="h-10 w-10 items-center justify-center rounded-full bg-surface-alt active:opacity-70"
           >
             <Ionicons name="ellipsis-horizontal" size={20} color={colors.ink} />
@@ -390,6 +364,70 @@ export default function EventDetailScreen(): React.ReactElement {
           <Ionicons name={saved ? 'heart' : 'heart-outline'} size={24} color={colors.ember} />
         </Pressable>
       </View>
+
+      {/* Safety, report & block flows (always free) */}
+      <SafetyActionsSheet
+        visible={safetyOpen}
+        onClose={() => setSafetyOpen(false)}
+        onBlock={() => {
+          setSafetyOpen(false);
+          setBlockOpen(true);
+        }}
+        onReportEvent={() => {
+          setSafetyOpen(false);
+          setReportTarget('event');
+        }}
+        onReportUser={() => {
+          setSafetyOpen(false);
+          setReportTarget('user');
+        }}
+        {...(isMember
+          ? {
+              onLeave: () => {
+                setSafetyOpen(false);
+                rsvp.leave.mutate();
+              },
+            }
+          : {})}
+      />
+      <ReportReasonDialog
+        visible={reportTarget !== null}
+        onClose={() => setReportTarget(null)}
+        targetLabel={reportTarget === 'user' ? 'this host' : 'this meetup'}
+        onPick={submitReport}
+      />
+      <ConfirmDialog
+        visible={blockOpen}
+        onClose={() => setBlockOpen(false)}
+        onConfirm={() =>
+          block.mutate(
+            { blockedUserId: event.host.userId },
+            {
+              onSuccess: () => {
+                setBlockOpen(false);
+                router.back();
+              },
+            },
+          )
+        }
+        loading={block.isPending}
+        tone="danger"
+        icon="ban"
+        title={`Block ${event.host.displayName}?`}
+        message="You won't see their meetups or messages, and they can't see yours. You can undo this in Settings."
+        confirmLabel="Block host"
+      />
+      <ConfirmDialog
+        visible={reportDone}
+        onClose={() => setReportDone(false)}
+        onConfirm={() => setReportDone(false)}
+        tone="verified"
+        icon="checkmark-circle"
+        title="Report sent"
+        message="Thank you — our safety team reviews reports fast and follows up if needed."
+        confirmLabel="Done"
+        cancelLabel={null}
+      />
     </Screen>
   );
 }

@@ -92,7 +92,12 @@ export default function SafetyCenterScreen(): React.ReactElement {
   return (
     <Screen padded={false}>
       <View className="flex-row items-center justify-between px-5 py-3">
-        <Text variant="h1">Safety Center</Text>
+        <View className="flex-1 pr-3">
+          <Text variant="h1">Safety Center</Text>
+          <Text variant="footnote" className="text-ink-muted">
+            Your safety tools — always one tap away.
+          </Text>
+        </View>
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
@@ -107,8 +112,12 @@ export default function SafetyCenterScreen(): React.ReactElement {
 
         {/* SOS */}
         <Pressable onPress={triggerSos} className="active:opacity-90">
-          <View className="items-center gap-2 rounded-2xl bg-danger p-6" style={{ elevation: 4 }}>
-            <Ionicons name="alert-circle" size={40} color={colors.inkInverse} />
+          <View className="items-center gap-2 rounded-3xl bg-danger p-6" style={{ elevation: 4 }}>
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-white/20">
+              <View className="h-11 w-11 items-center justify-center rounded-full bg-surface">
+                <Ionicons name="alert" size={28} color={colors.danger} />
+              </View>
+            </View>
             <Text variant="title" className="text-ink-inverse">
               SOS
             </Text>
@@ -152,7 +161,13 @@ export default function SafetyCenterScreen(): React.ReactElement {
           <Text variant="caption" className="text-ink-subtle">
             Share my plan
           </Text>
-          <Card className="gap-2">
+          <Card className="gap-3">
+            <Badge
+              label="Private & secure"
+              tone="verified"
+              icon="lock-closed"
+              className="self-start"
+            />
             <Text variant="footnote" className="text-ink-muted">
               Send a trusted contact where you’re going, who with, and when you’ll check in.
             </Text>

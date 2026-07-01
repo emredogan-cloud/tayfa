@@ -11,6 +11,7 @@ import {
   Button,
   Card,
   colors,
+  EmptyState,
   LiquidityBanner,
   PremiumUpsell,
   Screen,
@@ -54,6 +55,31 @@ function SafetyPill({
         {label}
       </Text>
     </Pressable>
+  );
+}
+
+/**
+ * Low-liquidity nudge (redesign `22` / `25`) — when supply is thin we don't show
+ * a ghost town: we invite the viewer to be the spark. Sits below the few events
+ * we did find, not only on a fully empty feed.
+ */
+function HostPromptCard({ onHost }: { onHost: () => void }): React.ReactElement {
+  return (
+    <View className="mt-3 flex-row items-center gap-3 overflow-hidden rounded-3xl border border-ember-soft bg-ember-soft p-4">
+      <Image
+        source={illustrations.eventsEmpty}
+        style={{ width: 92, height: 92 }}
+        contentFit="contain"
+        accessibilityLabel=""
+      />
+      <View className="flex-1 gap-1">
+        <Text variant="h2">Quiet around here?</Text>
+        <Text variant="footnote" className="text-ink-muted">
+          Be the spark — host the first hangout near you and your crowd will follow.
+        </Text>
+        <Button label="Host a meetup" fullWidth={false} onPress={onHost} className="mt-1" />
+      </View>
+    </View>
   );
 }
 
@@ -187,7 +213,9 @@ export default function FeedScreen(): React.ReactElement {
         ListHeaderComponent={header}
         ItemSeparatorComponent={() => <View className="h-3" />}
         ListFooterComponent={
-          isFree && events.length > 0 ? (
+          events.length === 0 ? null : feed.data?.liquidity.widened ? (
+            <HostPromptCard onHost={() => router.push('/(tabs)/create')} />
+          ) : isFree ? (
             <View className="pt-3">
               <PremiumUpsell
                 title="More matches. Better vibes."
@@ -212,25 +240,13 @@ export default function FeedScreen(): React.ReactElement {
               <ActivityIndicator color={colors.ember} />
             </View>
           ) : (
-            <View className="items-center gap-3 px-6 py-12">
-              <Image
-                source={illustrations.eventsEmpty}
-                style={{ width: 180, height: 180 }}
-                contentFit="contain"
-                accessibilityLabel=""
-              />
-              <Text variant="h1" className="text-center">
-                Quiet around here
-              </Text>
-              <Text variant="callout" className="text-center text-ink-muted">
-                Be the spark — host the first hangout near you and your crowd will follow.
-              </Text>
-              <Button
-                label="Host a meetup"
-                fullWidth={false}
-                onPress={() => router.push('/(tabs)/create')}
-              />
-            </View>
+            <EmptyState
+              illustration={illustrations.eventsEmpty}
+              title="Quiet around here"
+              body="Be the spark — host the first hangout near you and your crowd will follow."
+              actionLabel="Host a meetup"
+              onAction={() => router.push('/(tabs)/create')}
+            />
           )
         }
       />

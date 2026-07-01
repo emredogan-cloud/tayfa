@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   colors,
+  LocationPrimingDialog,
   Screen,
   shadows,
   Text,
@@ -167,6 +168,7 @@ export default function CreateScreen(): React.ReactElement {
   const [womenOnly, setWomenOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [primeOpen, setPrimeOpen] = useState(false);
 
   const template = useMemo(() => TEMPLATES.find((t) => t.id === templateId) ?? null, [templateId]);
   const hostGate = checkActionAllowed('host_event', verificationLevel);
@@ -239,7 +241,7 @@ export default function CreateScreen(): React.ReactElement {
             <Button
               label="Start free verification"
               variant="secondary"
-              onPress={() => router.push('/(tabs)/profile')}
+              onPress={() => router.push('/verify-to-host')}
             />
           </Card>
         ) : null}
@@ -307,7 +309,7 @@ export default function CreateScreen(): React.ReactElement {
               </View>
               <Pressable
                 onPress={() => {
-                  if (usingFallback) void Linking.openSettings();
+                  if (usingFallback) setPrimeOpen(true);
                 }}
                 style={shadows.subtle}
                 className="absolute bottom-2 right-2 flex-row items-center gap-1 rounded-full bg-surface px-3 py-2 active:opacity-80"
@@ -460,16 +462,30 @@ export default function CreateScreen(): React.ReactElement {
       </ScrollView>
 
       <View className="absolute inset-x-0 bottom-0 border-t border-line bg-canvas px-5 pb-8 pt-4">
-        <Button
-          label={canHost ? 'Publish meetup' : 'Verify to publish'}
-          loading={create.isPending}
-          disabled={!canHost || !titleValid}
-          onPress={onPublish}
-          rightIcon={
-            canHost ? null : <Ionicons name="sparkles" size={18} color={colors.inkInverse} />
-          }
-        />
+        {canHost ? (
+          <Button
+            label="Publish meetup"
+            loading={create.isPending}
+            disabled={!titleValid}
+            onPress={onPublish}
+          />
+        ) : (
+          <Button
+            label="Verify to publish"
+            onPress={() => router.push('/verify-to-host')}
+            rightIcon={<Ionicons name="sparkles" size={18} color={colors.inkInverse} />}
+          />
+        )}
       </View>
+
+      <LocationPrimingDialog
+        visible={primeOpen}
+        onClose={() => setPrimeOpen(false)}
+        onAllow={() => {
+          setPrimeOpen(false);
+          void Linking.openSettings();
+        }}
+      />
     </Screen>
   );
 }
