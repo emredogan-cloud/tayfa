@@ -24,6 +24,7 @@ import { cn } from '@/lib/cn';
 import { illustrations } from '@/lib/illustrations';
 import { track } from '@/lib/analytics';
 import { useNearbyCenter } from '@/lib/useLocation';
+import { useTravel } from '@/stores/travel';
 import { useSession } from '@/stores/session';
 
 function SafetyPill({
@@ -92,7 +93,13 @@ function HostPromptCard({ onHost }: { onHost: () => void }): React.ReactElement 
  */
 export default function FeedScreen(): React.ReactElement {
   const router = useRouter();
-  const { center, usingFallback } = useNearbyCenter();
+  const nearby = useNearbyCenter();
+  const travelCity = useTravel((s) => s.city);
+  const setTravelCity = useTravel((s) => s.setCity);
+  // Travel Mode (P9): a Tayfa+ member can scope the feed to another city's
+  // centroid before they go. When traveling we use the city center, not GPS.
+  const center = travelCity ? travelCity.center : nearby.center;
+  const usingFallback = travelCity ? false : nearby.usingFallback;
   const entitlement = useSession((s) => s.entitlement);
   const [womenOnly, setWomenOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -135,12 +142,21 @@ export default function FeedScreen(): React.ReactElement {
       <View className="flex-row items-start justify-between pt-2">
         <View className="flex-1">
           <Text variant="display">Discover</Text>
-          <View className="mt-0.5 flex-row items-center gap-1">
+          <Pressable
+            onPress={() => router.push('/travel-mode')}
+            accessibilityLabel="Change city"
+            className="mt-0.5 flex-row items-center gap-1 active:opacity-70"
+          >
             <Ionicons name="location-outline" size={13} color={colors.inkSubtle} />
             <Text variant="footnote" className="text-ink-subtle">
-              {usingFallback ? 'Around Istanbul' : 'Around you'}
+              {travelCity
+                ? `${travelCity.flag} ${travelCity.name}`
+                : usingFallback
+                  ? 'Around Istanbul'
+                  : 'Around you'}
             </Text>
-          </View>
+            <Ionicons name="chevron-down" size={13} color={colors.inkSubtle} />
+          </Pressable>
         </View>
         <View className="flex-row gap-2">
           <Pressable
@@ -182,6 +198,32 @@ export default function FeedScreen(): React.ReactElement {
           </Pressable>
         </View>
       </View>
+
+      {travelCity ? (
+        <View className="flex-row items-center gap-3 rounded-2xl border border-grape-soft bg-grape-soft px-4 py-3">
+          <View className="h-9 w-9 items-center justify-center rounded-full bg-grape">
+            <Ionicons name="airplane" size={16} color={colors.inkInverse} />
+          </View>
+          <View className="flex-1">
+            <Text variant="bodyStrong" className="text-grape">
+              Traveling in {travelCity.name}
+            </Text>
+            <Text variant="footnote" className="text-ink-muted">
+              Showing meetups here. You&apos;re not sharing your location.
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => setTravelCity(null)}
+            hitSlop={8}
+            accessibilityLabel="Return home"
+            className="rounded-full border border-grape px-3 py-1.5 active:opacity-80"
+          >
+            <Text variant="subhead" className="font-bold text-grape">
+              Home
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {feed.data ? (
         <LiquidityBanner
