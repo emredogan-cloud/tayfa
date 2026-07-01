@@ -7,4 +7,5 @@ export * from './useRsvp';
 export * from './useChat';
 export * from './useProfile';
 export * from './useNotifications';
+export * from './useMarketplace';
 export * from './useReport';

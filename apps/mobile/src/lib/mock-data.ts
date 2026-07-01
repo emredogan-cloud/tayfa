@@ -13,6 +13,8 @@ import type {
   CreatedEvent,
   EventDetail,
   FeedResponse,
+  HostStandingResponse,
+  MarketplaceResponse,
   MyProfileResponse,
   NotificationsResponse,
   RsvpResult,
@@ -390,6 +392,73 @@ const NOTIFICATIONS: NotificationsResponse = {
   unreadCount: 2,
 };
 
+// Demo host standing: phone-verified with a couple of hosted meetups — pro-tools
+// are within reach but payouts stay blocked (KYC + ID), so the panel honestly
+// shows the path rather than pretending money can move.
+const HOST_STANDING: HostStandingResponse = {
+  reliabilityScore: 0.72,
+  completedHostedEvents: 2,
+  verificationLevel: 'phone',
+  kycComplete: false,
+  currency: 'TRY',
+  lifetimeNetMinor: 0,
+  pendingPayoutMinor: 0,
+  ticketsSold: 0,
+};
+
+const MARKETPLACE: MarketplaceResponse = {
+  listings: [
+    {
+      id: uid(500),
+      title: 'Natural Wine Tasting',
+      kind: 'venue',
+      sponsored: true,
+      sponsorName: 'Vino Kadıköy',
+      hostName: 'Vino Kadıköy',
+      venueName: 'Vino Kadıköy',
+      neighborhood: 'Kadıköy',
+      startsAt: hoursFromNow(52),
+      category: 'Natural Wine',
+      priceMinor: 15_000,
+      currency: 'TRY',
+      capacityMax: 12,
+      sold: 8,
+    },
+    {
+      id: uid(501),
+      title: 'Rooftop Vinyl Night',
+      kind: 'featured',
+      sponsored: false,
+      sponsorName: null,
+      hostName: 'Deniz Y.',
+      venueName: 'Karaköy Rooftop',
+      neighborhood: 'Karaköy',
+      startsAt: hoursFromNow(28),
+      category: 'Indie',
+      priceMinor: 8_000,
+      currency: 'TRY',
+      capacityMax: 30,
+      sold: 21,
+    },
+    {
+      id: uid(502),
+      title: 'Hands-on Pottery Workshop',
+      kind: 'ticketed',
+      sponsored: false,
+      sponsorName: null,
+      hostName: 'Ece K.',
+      venueName: 'Moda Studio',
+      neighborhood: 'Moda',
+      startsAt: hoursFromNow(76),
+      category: 'Pottery',
+      priceMinor: 25_000,
+      currency: 'TRY',
+      capacityMax: 6,
+      sold: 6,
+    },
+  ],
+};
+
 const SESSION: SessionBootstrap = {
   userId: ME as SessionBootstrap['userId'],
   verificationLevel: 'phone',
@@ -411,6 +480,8 @@ export function getMockResponse(method: string, path: string): unknown | undefin
   if (method === 'GET' && p === '/me/crews') return CREWS;
   if (method === 'GET' && p === '/me/notifications') return NOTIFICATIONS;
   if (method === 'POST' && p === '/me/notifications/read') return { ok: true };
+  if (method === 'GET' && p === '/me/host/standing') return HOST_STANDING;
+  if (method === 'GET' && p === '/marketplace') return MARKETPLACE;
 
   const chatMatch = p.match(/^\/events\/([^/]+)\/chat$/);
   if (chatMatch) return chatThread(chatMatch[1]!);

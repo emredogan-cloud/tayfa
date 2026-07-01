@@ -220,7 +220,13 @@ export default function CreateScreen(): React.ReactElement {
           <Text variant="display" className="flex-1">
             Host a meetup
           </Text>
-          <Ionicons name="sparkles" size={22} color={colors.amber} />
+          <Pressable
+            onPress={() => router.push('/host-panel')}
+            accessibilityLabel="Host panel"
+            className="h-11 w-11 items-center justify-center rounded-full bg-ember-soft active:opacity-80"
+          >
+            <Ionicons name="stats-chart" size={20} color={colors.ember} />
+          </Pressable>
         </View>
         <Text variant="callout" className="-mt-4 text-ink-muted">
           Bring people together.

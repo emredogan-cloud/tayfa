@@ -223,6 +223,14 @@ export default function ProfileScreen(): React.ReactElement {
             />
             <Divider />
             <Row
+              icon="stats-chart"
+              tint={colors.ember}
+              label="Host tools"
+              sublabel="Standing, payouts & marketplace"
+              onPress={() => router.push('/host-panel')}
+            />
+            <Divider />
+            <Row
               icon="log-out-outline"
               tint={colors.inkMuted}
               label="Sign out"

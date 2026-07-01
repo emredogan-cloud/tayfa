@@ -9,4 +9,6 @@ export const qk = {
   myProfile: () => ['profile', 'me'] as const,
   publicProfile: (userId: string) => ['profile', userId] as const,
   notifications: () => ['notifications'] as const,
+  hostStanding: () => ['host', 'standing'] as const,
+  marketplace: () => ['marketplace'] as const,
 } as const;

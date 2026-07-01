@@ -12,7 +12,7 @@ import type {
   UserInterest,
   VerificationLevel,
 } from '@tayfa/shared/types';
-import type { NotificationCategory } from '@tayfa/shared/constants';
+import type { MarketplaceType, NotificationCategory } from '@tayfa/shared/constants';
 
 /**
  * BFF response contracts as consumed by the mobile client. These mirror the
@@ -101,6 +101,43 @@ export interface NotificationItem {
 export interface NotificationsResponse {
   readonly notifications: readonly NotificationItem[];
   readonly unreadCount: number;
+}
+
+/**
+ * A host's standing for the Host Panel. `reliabilityScore` is 0..1 to feed the
+ * shared marketplace eligibility rules directly. Money is integer minor units.
+ */
+export interface HostStandingResponse {
+  readonly reliabilityScore: number;
+  readonly completedHostedEvents: number;
+  readonly verificationLevel: VerificationLevel;
+  readonly kycComplete: boolean;
+  readonly currency: 'TRY' | 'EUR';
+  readonly lifetimeNetMinor: number;
+  readonly pendingPayoutMinor: number;
+  readonly ticketsSold: number;
+}
+
+/** A ticketed / featured / venue-sponsored marketplace listing. */
+export interface MarketplaceListing {
+  readonly id: string;
+  readonly title: string;
+  readonly kind: MarketplaceType;
+  readonly sponsored: boolean;
+  readonly sponsorName: string | null;
+  readonly hostName: string;
+  readonly venueName: string;
+  readonly neighborhood: string;
+  readonly startsAt: string;
+  readonly category: string;
+  readonly priceMinor: number;
+  readonly currency: 'TRY' | 'EUR';
+  readonly capacityMax: number;
+  readonly sold: number;
+}
+
+export interface MarketplaceResponse {
+  readonly listings: readonly MarketplaceListing[];
 }
 
 /** A selectable interest in the onboarding taste-card catalog. */
