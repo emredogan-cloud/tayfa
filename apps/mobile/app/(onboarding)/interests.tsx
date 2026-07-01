@@ -12,22 +12,7 @@ import { illustrations } from '@/lib/illustrations';
 import { cn } from '@/lib/cn';
 import { track } from '@/lib/analytics';
 import { useOnboarding, type DraftInterest } from '@/stores/onboarding';
-
-/** Per-domain label, glyph and accent — drives the filter rail + card icons. */
-const DOMAIN_META: Record<
-  InterestDomain,
-  { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }
-> = {
-  music_genre: { label: 'Music', icon: 'musical-notes', color: colors.ember },
-  artist: { label: 'Artists', icon: 'mic', color: colors.women },
-  tv_show: { label: 'TV', icon: 'tv', color: colors.grape },
-  film: { label: 'Film', icon: 'film', color: colors.amber },
-  sport: { label: 'Sport', icon: 'basketball', color: colors.verified },
-  hobby: { label: 'Hobbies', icon: 'color-palette', color: colors.ember },
-  cuisine: { label: 'Food', icon: 'restaurant', color: colors.amber },
-  cause: { label: 'Causes', icon: 'heart', color: colors.women },
-  game: { label: 'Games', icon: 'game-controller', color: colors.grape },
-};
+import { DOMAIN_META } from '@/lib/interestMeta';
 
 const MIN = CONTENT_LIMITS.minInterestsToComplete;
 /** Items shown per domain before the "See all" affordance. */
