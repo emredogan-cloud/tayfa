@@ -22,13 +22,13 @@
   "dependencies": {
     "@tayfa/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "h3-js": "^4.4.0",
+    "h3-js": "^4.5.0",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.12",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   }
 }
